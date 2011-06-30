@@ -18,7 +18,7 @@ INTERFACE void gb_shutdown()
 {
     mem_shutdown();
 	pad_shutdown();
-	so_shutdown();
+	//so_shutdown();
 	lcd_shutdown();
     log_shutdown();
 }

@@ -43,7 +43,7 @@ static byte linebuffer[192]; // showed from 8-th byte
 
 PLAT unsigned benchmark_sound,benchmark_gfx;
 
-#define WIN_STYLE ( WS_CAPTION | WS_BORDER )
+#define WIN_STYLE ( WS_CAPTION | WS_BORDER | WS_SYSMENU )
 
 #define SCALE 2
 
@@ -80,9 +80,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case WM_CREATE:
 			break;
 		case WM_CLOSE:
-			DestroyWindow(hwnd);
+            DestroyWindow (hwnd);
 			break;
 		case WM_DESTROY:
+            gb_shutdown ();
 			exit (0);
 			break;
 		case WM_KEYDOWN:
@@ -719,11 +720,11 @@ PLAT INTERFACE void lcd_vsync()
 		bm_g/=8;
 		bm_s/=8;
 		bm_o=time-bm_s-bm_g;
-        if(time)
-            sprintf(title, "GameBoy-%15s [%u fps]O:%02dG:%02dS:%02d", cart.title,
-			1000000/time,(bm_o*100)/time,(bm_g*100)/time,(bm_s*100)/time);
-        else
-            sprintf(title, "GameBoy -- %s [? fps]", romhdr->title);
+        //if(time)
+        //    sprintf(title, "GameBoy-%15s [%u fps]O:%02dG:%02dS:%02d", cart.title,
+		//	1000000/time,(bm_o*100)/time,(bm_g*100)/time,(bm_s*100)/time);
+        //else
+            sprintf(title, "GameBoy - %s [%u fps]", cart.title, 1000000/time);
         SetWindowText(main_hwnd, title);
     }
 
