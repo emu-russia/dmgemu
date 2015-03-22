@@ -12,6 +12,8 @@ We've got first high-resolution images of DMG-CPU:
 
 <img src='http://psxdev.ru//images/wys/TS_01_12_17_25_17.jpg'>
 
+(Credits : Zeptobars)
+
 It is made as 2-metal CMOS in standard cells + custom memory/registers blocks.<br>
 <br>
 This is original "black-and-white" GameBoy (DMG-01) emulator.<br>
