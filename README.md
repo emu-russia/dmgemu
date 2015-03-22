@@ -16,6 +16,9 @@ We've got first high-resolution images of DMG-CPU:
 
 It is made as 2-metal CMOS in standard cells + custom memory/registers blocks.<br>
 <br>
+
+**Project Overview**
+
 This is original "black-and-white" GameBoy (DMG-01) emulator.<br>
 It supports variety of mappers, boot from internal ROM and has nice-looking LCD effect.<br>
 Compatibility is pretty high.<br>
