@@ -1,5 +1,11 @@
 `Nintendo GameBoy Emulator`
 
+**Update**
+
+Siliconporn community made another high-res images of top metal:
+
+http://siliconpr0n.org/map/nintendo/dmg-cpu_b/
+
 **NEWS!**
 
 We've got first high-resolution images of DMG-CPU:
