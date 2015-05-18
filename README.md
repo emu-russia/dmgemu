@@ -52,6 +52,4 @@ Thanks to E}|{, for invaluable help with LCD and sound!<br>
 <br>
 Thanks to Gumpei Yokoi for this great handheld system and Nintendo for bunch of really awesome games.<br>
 <br>
-<wiki:gadget url="http://www.ohloh.net/p/584860/widgets/project_basic_stats.xml" height="220" border="1"/><br>
-<br>
 <b>This project can be revived on new level, since I sent DMG-CPU to decaping.</b>
