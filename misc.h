@@ -1,10 +1,10 @@
-void __cdecl sys_error(char *, ...);
+void sys_error(char *, ...);
 void rand_init();
 void load_game(char *);
 void show_regs();
-void load_SRAM(u_char *, long);
-void save_SRAM(u_char *, long);
+void load_SRAM(uint8_t*, long);
+void save_SRAM(uint8_t*, long);
 void log_init(char *);
 void log_shutdown();
-void __cdecl __log(char *, ...);
+void __log(char *, ...);
 void create_vram_image();

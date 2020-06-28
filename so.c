@@ -12,7 +12,7 @@ typedef struct
 {
     int hz, len;
     int stereo;
-    byte *buf;
+    uint8_t *buf;
     int pos;
 } PCM;
 
@@ -338,7 +338,7 @@ typedef struct
 {
     unsigned outfreq,ratelo,ratehi,z0;
     sndchan ch[4];
-    byte wave[16];
+    uint8_t wave[16];
 } so;
 
 #define SO_FREQ (1<<20)
@@ -365,7 +365,7 @@ typedef struct
 #define RI_NR51 0x25
 #define RI_NR52 0x26
 
-const static byte dmgwave[16] =
+const static uint8_t dmgwave[16] =
 {
     0xac, 0xdd, 0xda, 0x48,
     0x36, 0x02, 0xcf, 0x16,
@@ -373,7 +373,7 @@ const static byte dmgwave[16] =
     0xac, 0xdd, 0xda, 0x48
 };
 
-const static byte sqwave[4][8] =
+const static uint8_t sqwave[4][8] =
 {
     {  0, 0,-1, 0, 0, 0, 0, 0 },
     {  0,-1,-1, 0, 0, 0, 0, 0 },
@@ -395,18 +395,18 @@ const static int divtab[8] =
 
 so snd;
 
-static byte noise7[16];
-static byte noise15[4096];
+static uint8_t noise7[16];
+static uint8_t noise15[4096];
 
-static void makenoise(byte *to,int nbits);
+static void makenoise(uint8_t *to,int nbits);
 
-PLAT INTERFACE void so_init(unsigned long freq)
+PLAT void so_init(unsigned long freq)
 {
     SNDDMA_InitWav(freq);
 	makenoise(noise15,15);
 	makenoise(noise7,7);
 	
-	pcm.buf = (byte *)malloc(WAV_BUFFER_SIZE*16*(pcm.stereo+1));
+	pcm.buf = (uint8_t *)malloc(WAV_BUFFER_SIZE*16*(pcm.stereo+1));
 	pcm_submit();
 
 //    pcm_dump = fopen("pcm.bin", "wb");
@@ -415,7 +415,7 @@ PLAT INTERFACE void so_init(unsigned long freq)
     so_reset();
 }
 
-PLAT INTERFACE void so_shutdown()
+PLAT void so_shutdown()
 {
     if(pcm_dump) fclose(pcm_dump);
 	pcm.pos = 0;
@@ -465,7 +465,7 @@ everything not noted here is updated immediately
 unsigned long so_clk_inner[2];
 unsigned long so_clk_nextchange;
 
-static void makenoise(byte *to,int nbits) {
+static void makenoise(uint8_t *to,int nbits) {
 	unsigned i,j,counter,acc,tmp;
 	counter = (1<<nbits)-1;
 	i=1<<(nbits-- -3);
@@ -580,7 +580,7 @@ void so_reset()
 
 // **********************************************************************
 
-INTERFACE byte so_read(byte r)
+uint8_t so_read(uint8_t r)
 {
     so_mix();
     return hram[0x100 + r];
@@ -660,7 +660,7 @@ void s4_init()
 	S4.envol = R_NR42 >> 4;
 }
 
-INTERFACE void so_write(byte r, byte b)
+void so_write(uint8_t r, uint8_t b)
 {
     if (!(R_NR52 & 128) && r != RI_NR52) return;
     if ((r & 0xF0) == 0x30)
@@ -790,16 +790,16 @@ TODO:
 */
 void so_mix_basic(unsigned long so_clk_new) {
 	
-	byte *s1_waveptr;
-	byte *s2_waveptr;
+    uint8_t *s1_waveptr;
+    uint8_t *s2_waveptr;
 	int l,r,lr[4][2];
 	unsigned s;
 	unsigned long clk[2];
 	clk[0] = so_clk_inner[0];
 	clk[1] = so_clk_inner[1];
 	if(clk[1]>=so_clk_new) return;
-	s1_waveptr = (byte*)(sqwave+((unsigned)R_NR11>>6));
-	s2_waveptr = (byte*)(sqwave+((unsigned)R_NR21>>6));
+	s1_waveptr = (uint8_t*)(sqwave+((unsigned)R_NR11>>6));
+	s2_waveptr = (uint8_t*)(sqwave+((unsigned)R_NR21>>6));
 	//on[0]=R_NR52&S1.on;
 	//on[1]=((unsigned)R_NR52>>1)&S2.on;
 	//on[2]=((unsigned)R_NR52>>2)&((unsigned)R_NR30>>7)&S3.on;
@@ -874,7 +874,7 @@ void so_mix_basic(unsigned long so_clk_new) {
 
 void so_mix(void) {
 	unsigned i,tmp,tmp2,swperiod,enperiod;
-	byte *pt;
+    uint8_t *pt;
 	if(!pcm.buf) return;
 	benchmark_sound-=GetTimer();
 	while (so_clk_nextchange<(unsigned long)gb_clk) {
@@ -951,4 +951,3 @@ void so_mix(void) {
 	benchmark_sound+=GetTimer();
 	//if(wb_free > 0) pcm_submit();
 }
-

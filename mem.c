@@ -46,21 +46,21 @@ mem_Read8P   mem_r8 [128];
 mem_Write8P  mem_w8 [128];
 
 /* ROM banks */
-//byte *rom0, *rom1;
-//byte trash[0x4000];
+//uint8_t *rom0, *rom1;
+//uint8_t trash[0x4000];
  
 /* VRAM */
-byte vram[0x2000];
+uint8_t vram[0x2000];
 
 /* current RAM bank and enable flag */
-//byte *ram_bank;
+//uint8_t *ram_bank;
 //int ram_bank_enable;
 
 /* internal RAM ($C000-$DFFF) */
-byte ram[0x2000];
+uint8_t ram[0x2000];
 
 /* high memory, OAM and hardware registers ($FE00-$FFFF) */
-byte hram[0x200];
+uint8_t hram[0x200];
 
 extern mem_Read8P   mem_r8 [128];
 extern mem_Write8P  mem_w8 [128];
@@ -95,12 +95,12 @@ static void MemMapW(unsigned from,unsigned to,mem_Write8P p) {
 	Common memory handlers
 ***********************************************************************/
 
-byte mem_r8_TRAP(unsigned addr) {
+uint8_t mem_r8_TRAP(unsigned addr) {
 	sys_error("Trap on memory read, [%X]",(unsigned)addr);
 	return 0xFF;
 }
-byte mem_r8_emptyROM(unsigned addr){return 0x00; }
-byte mem_r8_ROMbank0(unsigned addr)
+uint8_t mem_r8_emptyROM(unsigned addr){return 0x00; }
+uint8_t mem_r8_ROMbank0(unsigned addr)
 {
     if (addr < 256 && R_INTROM == 0) return introm[addr];
     else
@@ -109,22 +109,22 @@ byte mem_r8_ROMbank0(unsigned addr)
         else return cart.rom[0].ptr[addr];
     }
 }
-byte mem_r8_ROMbank1(unsigned addr){return cart.rom[1].ptr[addr&0x3FFF];}
-byte mem_r8_RAM(unsigned addr) {return ram[addr&0x1FFF];}
-byte mem_r8_VRAM(unsigned addr) {return vram[addr&0x1FFF];}
-byte mem_r8_RAMbank(unsigned addr) {return cart.ram[0].ptr[addr&cart.ram_amask];}
-byte mem_r8_RAMbank4(unsigned addr) {return cart.ram[0].ptr[addr&0x1FF]|0xF0;}
-void mem_w8_NULL(unsigned addr,byte n) {}
-void mem_w8_TRAP(unsigned addr,byte n) {
+uint8_t mem_r8_ROMbank1(unsigned addr){return cart.rom[1].ptr[addr&0x3FFF];}
+uint8_t mem_r8_RAM(unsigned addr) {return ram[addr&0x1FFF];}
+uint8_t mem_r8_VRAM(unsigned addr) {return vram[addr&0x1FFF];}
+uint8_t mem_r8_RAMbank(unsigned addr) {return cart.ram[0].ptr[addr&cart.ram_amask];}
+uint8_t mem_r8_RAMbank4(unsigned addr) {return cart.ram[0].ptr[addr&0x1FF]|0xF0;}
+void mem_w8_NULL(unsigned addr, uint8_t n) {}
+void mem_w8_TRAP(unsigned addr, uint8_t n) {
 	sys_error("Trap on memory write, [%X] <- %X ",(unsigned)addr,(unsigned)n);
 }
-void mem_w8_VRAM(unsigned addr,byte n) {
+void mem_w8_VRAM(unsigned addr, uint8_t n) {
 	addr &=0x1fff;vram[addr] = n; tilecache[addr>>4] = 0;
 }
-//void mem_w8_RAM(unsigned addr,byte n) {ram[addr&0x1FFF]=n;}
-void mem_w8_RAM(unsigned addr,byte n) {ram[addr&0x1FFF]=n;}
-void mem_w8_RAMbank(unsigned addr,byte n) {cart.ram[0].ptr[addr&cart.ram_amask]=n;}
-void mem_w8_RAMbank4(unsigned addr,byte n) {cart.ram[0].ptr[addr&0x1FF]=n;}
+//void mem_w8_RAM(unsigned addr,uint8_t n) {ram[addr&0x1FFF]=n;}
+void mem_w8_RAM(unsigned addr, uint8_t n) {ram[addr&0x1FFF]=n;}
+void mem_w8_RAMbank(unsigned addr, uint8_t n) {cart.ram[0].ptr[addr&cart.ram_amask]=n;}
+void mem_w8_RAMbank4(unsigned addr, uint8_t n) {cart.ram[0].ptr[addr&0x1FF]=n;}
 
 #define MAPROM(x) MEMMAP_R(0x4000,0x8000,x);
 
@@ -164,7 +164,7 @@ static struct MBC_ {
 // mode1 - 32*4 pages of ROM, 1 page of RAM
 // mode2 - 32 pages of ROM, 1*4 pages of RAM
 
-void mem_w8_MBC1_RAMcontrol(unsigned addr,byte n) {
+void mem_w8_MBC1_RAMcontrol(unsigned addr, uint8_t n) {
 	if((n&0xF) == 0xA) {
 		if(!MBC.ramenabled) MAPRAM(mem_r8_RAMbank,mem_w8_RAMbank);
 		MBC.ramenabled = 1;
@@ -173,14 +173,14 @@ void mem_w8_MBC1_RAMcontrol(unsigned addr,byte n) {
 		MBC.ramenabled = 0;
 	}
 }
-void mem_w8_MBC1_setROM(unsigned addr,byte n) {
-	register unsigned nn=n&0x1F; // 5 bits
+void mem_w8_MBC1_setROM(unsigned addr, uint8_t n) {
+	unsigned nn=n&0x1F; // 5 bits
 	if(!nn) nn++;
 	if(!MBC.mode2) nn|=cart.rom[1].bank&(3<<5);  //
 	SETROM(nn);
 }
-void mem_w8_MBC1_setROMorRAM(unsigned addr,byte n) {
-	register unsigned nn=(unsigned)n&3; // 2 bits
+void mem_w8_MBC1_setROMorRAM(unsigned addr, uint8_t n) {
+	unsigned nn=(unsigned)n&3; // 2 bits
 	if(MBC.mode2) {
 		if(cart.ram_nbanks) SETRAM(nn);
 	} else {
@@ -188,8 +188,8 @@ void mem_w8_MBC1_setROMorRAM(unsigned addr,byte n) {
 		SETROM(nn);
 	}
 }
-void mem_w8_MBC1_mode(unsigned addr,byte n) {
-	register unsigned nn;
+void mem_w8_MBC1_mode(unsigned addr, uint8_t n) {
+	unsigned nn;
 	if(MBC.mode2 == (n&(unsigned)1)) return;
 	MBC.mode2 = n&(unsigned)1;
 	nn = cart.rom[1].bank&0x1F;
@@ -225,8 +225,8 @@ static InitGenericRAM(void) {
 
 
 // TODO: I don't know exactly how to map those 512x4 bits properly.
-void mem_w8_MBC2_set(unsigned addr,byte n) {
-	register unsigned nn=n&0xF;
+void mem_w8_MBC2_set(unsigned addr, uint8_t n) {
+	unsigned nn=n&0xF;
 	if(addr&0x2100) {  // ROM control
 		if(!nn) nn=1;
 		SETROM(nn);
@@ -254,20 +254,20 @@ static void InitMBC2(void) {
 ***********************************************************************/
 // TODO: no realtime clock support
 
-void mem_w8_MBC3_setROM(unsigned addr,byte n) {
+void mem_w8_MBC3_setROM(unsigned addr, uint8_t n) {
 	//register unsigned nn=n&0x7F; // 7 bits
 	//if(!MBC.mode2) nn|=cart.rom[1].bank&~0x1F;  //
 	if(!n) n = 1;
 	SETROM(n);
 }
-void mem_w8_MBC3_setRAM_or_clock(unsigned addr,byte n) {
+void mem_w8_MBC3_setRAM_or_clock(unsigned addr, uint8_t n) {
 	if(!(n&~3)) { // set RAM bank
 		if(cart.ram_nbanks) SETRAM(n);
 	} else {	// set RT clock register
 		
 	}
 }
-void mem_w8_MBC3_clocklatch(unsigned addr,byte n) {
+void mem_w8_MBC3_clocklatch(unsigned addr, uint8_t n) {
 	
 }
 
@@ -287,15 +287,15 @@ static void InitMBC3_RAM(void) {
 	MBC5 support
 ***********************************************************************/
 
-void mem_w8_MBC5_setROM0(unsigned addr,byte n) {
-	register unsigned nn=(unsigned)n|(cart.rom[1].bank&0x100);
+void mem_w8_MBC5_setROM0(unsigned addr, uint8_t n) {
+	unsigned nn=(unsigned)n|(cart.rom[1].bank&0x100);
 	SETROM(nn);
 }
-void mem_w8_MBC5_setROM1(unsigned addr,byte n) {
-	register unsigned nn=((unsigned)n<<8)|(cart.rom[1].bank&0xFF);
+void mem_w8_MBC5_setROM1(unsigned addr, uint8_t n) {
+	unsigned nn=((unsigned)n<<8)|(cart.rom[1].bank&0xFF);
 	SETROM(nn);
 }
-void mem_w8_MBC5_setRAM(unsigned addr,byte n) {
+void mem_w8_MBC5_setRAM(unsigned addr, uint8_t n) {
 	SETRAM(n);
 }
 
@@ -316,24 +316,24 @@ static void InitMBC5_RAM(void) {
 	I/O implementation
 ***********************************************************************/
 
-byte mem_r8_IO(unsigned addr) {
+uint8_t mem_r8_IO(unsigned addr) {
 	__log("HRD %.4X [PC=%.4X]", addr, R_PC);
     if(addr >= 0xff00) {
 		if(RANGE(addr, 0xff10, 0xff3f))
-			return so_read((byte)(addr & 0xff));
+			return so_read((uint8_t)(addr & 0xff));
 		switch(addr & 0xff) {
         case 0x00 : 
             {
-                byte pad;
+				uint8_t pad;
                 if(R_PAD & 0x20) pad = pad_lo();
                 if(R_PAD & 0x10) pad = pad_hi();
                 return ~pad & 0xf;
             }
 		case 0x4:	// R_DIV - divider counter read
-			return (byte)((gb_clk>>6)+gb_divbase);
+			return (uint8_t)((gb_clk>>6)+gb_divbase);
 		case 0x5:	// R_TIMA - timer accumulator read
 			if(R_TAC&4)
-				return (byte)((gb_clk>>gb_timshift)+gb_timbase); // current value
+				return (uint8_t)((gb_clk>>gb_timshift)+gb_timbase); // current value
 			// otherwise old(frozen) value will be returned
 		break;
 		}
@@ -348,14 +348,14 @@ byte mem_r8_IO(unsigned addr) {
     to[3] = (data >> (3 << 1)) & 3;
 
 
-static const byte timshift[4]={8,2,4,6};
+static const uint8_t timshift[4]={8,2,4,6};
 
-void mem_w8_IO(unsigned addr,byte data) {
+void mem_w8_IO(unsigned addr, uint8_t data) {
 	__log("HWR %.4X = %.2X [PC=%.4X]", addr, data, R_PC);
 
 	if(addr>=0xFF00) { // OAM or hram?
 	    if(RANGE(addr, 0xff10, 0xff3f)) {
-			so_write((byte)(addr & 0xff), data);
+			so_write((uint8_t)(addr & 0xff), data);
 			return;
 		}
 		switch(addr & 0xff) {
@@ -374,7 +374,7 @@ void mem_w8_IO(unsigned addr,byte data) {
 		case 0x07:  // R_TAC
 			if(!(R_TAC^data)) return; // nothing changed
 			if(R_TAC&4) // Timer was enabled?
-				R_TIMA=(byte)((gb_clk>>gb_timshift)+gb_timbase); // refresh current value
+				R_TIMA=(uint8_t)((gb_clk>>gb_timshift)+gb_timbase); // refresh current value
 			gb_timshift = timshift[data&3];	// new clock shift rate
 			gb_timerclk = MAXULONG;
 			if(data&4) // Timer clock enabled?
@@ -401,7 +401,7 @@ void mem_w8_IO(unsigned addr,byte data) {
 		case 0x34: case 0x35: case 0x36: case 0x37:
 		case 0x38: case 0x39: case 0x3A: case 0x3B:
 		case 0x3C: case 0x3D: case 0x3E: case 0x3F:
-			so_write((byte)(addr & 0xff), data);
+			so_write((uint8_t)(addr & 0xff), data);
 		return;*/
         //case 0x41: // STAT
           //  R_STAT = (R_STAT &7)|(data&0xF8);
@@ -414,7 +414,7 @@ void mem_w8_IO(unsigned addr,byte data) {
         case 0x46: // DMA
             {
                 int i; // TODO: implement proper timing
-                word spraddr = data << 8;
+				uint16_t spraddr = data << 8;
                 for(i=0; i<0xa0; i++)
 					hram[i]=RD(spraddr + i);
                     //WR(0xfe00 | i, RD(spraddr | i));
@@ -445,7 +445,7 @@ rom_header_t *romhdr;
 
 static void do_header_chk(int fire)
 {
-	byte *buf = (void *)romhdr->title;
+	uint8_t *buf = (void *)romhdr->title;
 	int chk = 0;
 	int i;
 
@@ -454,7 +454,7 @@ static void do_header_chk(int fire)
 
 	chk = 0x100 - (chk + 25);
 
-	if(fire && romhdr->header_chk != (byte)chk)
+	if(fire && romhdr->header_chk != (uint8_t)chk)
 		sys_error("header checksum failed!");
 }
 
@@ -472,7 +472,7 @@ static void do_header_chk(int fire)
 	chk &= 0xffff;
 	chk = (chk << 8) | (chk >> 8);
 
-	if(fire && romhdr->global_chk != (word)chk)
+	if(fire && romhdr->global_chk != (uint16_t)chk)
 		sys_error("global checksum failed!");
 }*/
 
@@ -553,7 +553,7 @@ static void init_internal_RAM(int how)
 
 void mem_InitGeneric(void);
 
-INTERFACE void mem_init()
+void mem_init()
 {
 	check_ROM_header();
 	init_internal_RAM(1);
@@ -605,7 +605,7 @@ INTERFACE void mem_init()
 	}
 }
 
-INTERFACE void mem_shutdown()
+void mem_shutdown()
 {
 	switch(romhdr->type) {
 	case 6:
@@ -690,13 +690,13 @@ static void mem_InitGeneric(void) {
 /**********************************************************************
    16 bit read/write subroutines
 **********************************************************************/
-word mem_read16 (unsigned addr) {
-	return (word)(
+uint16_t mem_read16 (unsigned addr) {
+	return (uint16_t)(
 	(unsigned)mem_r8[addr>>9](addr)+
 	((unsigned)mem_r8[(addr+1)>>9](addr+1)<<8));
 }
 void mem_write16 (unsigned addr,unsigned d) {
-	mem_w8[addr>>9](addr,(byte)d);
+	mem_w8[addr>>9](addr,(uint8_t)d);
 	addr++;
-	mem_w8[addr>>9](addr,(byte)(d>>8));
+	mem_w8[addr>>9](addr,(uint8_t)(d>>8));
 }

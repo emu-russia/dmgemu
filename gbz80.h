@@ -3,12 +3,12 @@
 union Z80reg {
 	struct {
 #ifdef BIGENDIAN
-		byte l,h;
+		uint8_t l,h;
 #else
-		byte h,l;
+		uint8_t h,l;
 #endif
 	};
-	word hl;
+	uint16_t hl;
 	unsigned align; // So 1 Z80reg record will be always equal to CPU word size
 };
 
@@ -50,19 +50,19 @@ extern unsigned HALT, IME;
 
 
 //#define SF (1<<SF_POS)
-#define ZF (byte)(1<<ZF_POS)
-#define HF (byte)(1<<HF_POS)
+#define ZF (uint8_t)(1<<ZF_POS)
+#define HF (uint8_t)(1<<HF_POS)
 //#define PF (1<<PF_POS)
-#define NF (byte)(1<<NF_POS)
-#define CF (byte)(1<<CF_POS)
+#define NF (uint8_t)(1<<NF_POS)
+#define CF (uint8_t)(1<<CF_POS)
 
-#define ZFh (word)(0x100<<ZF_POS)
-#define HFh (word)(0x100<<HF_POS)
-#define NFh (word)(0x100<<NF_POS)
-#define CFh (word)(0x100<<CF_POS)
+#define ZFh (uint16_t)(0x100<<ZF_POS)
+#define HFh (uint16_t)(0x100<<HF_POS)
+#define NFh (uint16_t)(0x100<<NF_POS)
+#define CFh (uint16_t)(0x100<<CF_POS)
 
-#define BFLAGS (byte)0xAC
-#define BFLAGSh (word)0xAC00
+#define BFLAGS (uint8_t)0xAC
+#define BFLAGSh (uint16_t)0xAC00
 // eto maska dlya "skvoznyh" flagov) mozhet i ne nado ee uzat', tem ne menee
 
 //#define FETCH() RD(R_PC++) disabled because of incompatibility

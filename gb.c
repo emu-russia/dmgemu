@@ -2,7 +2,7 @@
 #include "gbemu.h"
 
 /* run on emu start */
-INTERFACE void gb_init()
+void gb_init()
 {
    // log_init("gbemu.log");
 	mem_init();
@@ -14,7 +14,7 @@ INTERFACE void gb_init()
 }
 
 /* run on emu shutdown */
-INTERFACE void gb_shutdown()
+void gb_shutdown()
 {
     mem_shutdown();
 	pad_shutdown();
@@ -64,7 +64,7 @@ unsigned long gb_divbase;
 unsigned long gb_timbase;
 /* these variables are added to current gb clock to obtain
    timer counter values in lower byte of result */
-byte gb_timshift;	// input clock shift       1048576/(4,16,64,256)
+uint8_t gb_timshift;	// input clock shift       1048576/(4,16,64,256)
 
 void gb_reload_tima(unsigned data) { // will only contain byte value
 	gb_timbase = data-(signed long)(gb_clk >> gb_timshift)-256;
@@ -85,11 +85,11 @@ static void execute(unsigned long n) {
 // **********************************************************************
 
 /* begin emulation */
-INTERFACE void start()
+void start()
 {
 	
 	unsigned i,gb_old;
-	//byte lcd_status_prev,lcd_status:
+	//uint8_t lcd_status_prev,lcd_status:
 	//lcd_status_prev=lcd_status=0;
 	lcd_int_on=0;
 	gb_eventclk = gb_clk = gb_divbase = 0;

@@ -1,4 +1,4 @@
 void pad_init();
 void pad_shutdown();
-byte pad_hi();
-byte pad_lo();
+uint8_t pad_hi();
+uint8_t pad_lo();

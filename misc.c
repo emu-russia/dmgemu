@@ -4,7 +4,7 @@
 /* location of GB cart image in memory */
 //extern u_char *game;
 
-INTERFACE void __cdecl sys_error(char *fmt, ...)
+void sys_error(char *fmt, ...)
 {
 	va_list	arg;
 	char	buf[0x10000]; 
@@ -17,13 +17,13 @@ INTERFACE void __cdecl sys_error(char *fmt, ...)
 	exit(1);
 }
 
-PLAT INTERFACE void rand_init()
+PLAT void rand_init()
 {
 	srand(GetTickCount() & 0xffff);
 }
 
 /* load game from file */
-PLAT INTERFACE void load_game(char *name)
+PLAT void load_game(char *name)
 {
 	FILE *f;
 	long size;
@@ -44,7 +44,7 @@ PLAT INTERFACE void load_game(char *name)
 }
 
 /* use only for DEBUG */
-PLAT INTERFACE void show_regs()
+PLAT void show_regs()
 {
     char buf[0x1000];
     int i, p = 0;
@@ -82,7 +82,7 @@ PLAT INTERFACE void show_regs()
 }
 
 /* load battery-backed/onboard RAM */
-PLAT INTERFACE void load_SRAM(u_char *ram_ptr, long size)
+PLAT void load_SRAM(u_char *ram_ptr, long size)
 {
     FILE *f;
     long i;
@@ -103,7 +103,7 @@ PLAT INTERFACE void load_SRAM(u_char *ram_ptr, long size)
 }
 
 /* save battery-backed/onboard RAM */
-PLAT INTERFACE void save_SRAM(u_char *ram_ptr, long size)
+PLAT void save_SRAM(u_char *ram_ptr, long size)
 {
     FILE *f;
     char name[128];
@@ -123,18 +123,18 @@ PLAT INTERFACE void save_SRAM(u_char *ram_ptr, long size)
 
 static FILE *__log__ = NULL;
 
-PLAT INTERFACE void log_init(char *file)
+PLAT void log_init(char *file)
 {
     __log__ = fopen(file, "w");
     if(!__log__) return;
 }
 
-PLAT INTERFACE void log_shutdown()
+PLAT void log_shutdown()
 {
     if(__log__) fclose(__log__);
 }
 
-PLAT INTERFACE void __cdecl __log(char *fmt, ...)
+PLAT void __log(char *fmt, ...)
 {
 	va_list	arg;
 	char buf[0x1000];

@@ -5,7 +5,7 @@
 // This macros serves for switching Z80 undocumented "flags" support off
 #ifdef USEBFLAGS
 #define SETBF(r) (r&BFLAGS)
-#define ADDBF(r) R_F|=(byte)(r&BFLAGS)
+#define ADDBF(r) R_F|=(uint8_t)(r&BFLAGS)
 #define _SETBF(r) | (r&BFLAGS)
 #else
 #define SETBF(r)
@@ -41,10 +41,10 @@ static void Undefined(void)
     sys_error("Undefined GB Z80 opcode %02X at PC = %.4X",(unsigned)RD(R_PC), (unsigned)(R_PC));
 }
 
-static byte z_b_t[256];
-static byte inc_t[256];
-static byte dec_t[256];
-static byte swap_t[256];
+static uint8_t z_b_t[256];
+static uint8_t inc_t[256];
+static uint8_t dec_t[256];
+static uint8_t swap_t[256];
 
 // **********************************************************************
 
@@ -60,11 +60,11 @@ static byte swap_t[256];
 #define _DAA(_op_) {\
 		if((tmp32&0xF)>9 || R_F&HF) {\
 			tmp32 _op_ 6;\
-			tmp8|=(byte)HF;\
+			tmp8|=(uint8_t)HF;\
 		}\
 		if(tmp32 > 0x99) {\
 			tmp32 _op_ 0x60;\
-			tmp8|=(byte)CF;\
+			tmp8|=(uint8_t)CF;\
 }		}
 
 
@@ -81,7 +81,7 @@ static byte swap_t[256];
 #define DAA(x) {\
 	tmp32=(unsigned)R_A+((unsigned)(R_F&CF)<<8);\
 	if(tmp8=(R_F&NF)) _DAS(-=) else _DAA(+=)\
-	R_A = (byte)tmp32;\
+	R_A = (uint8_t)tmp32;\
 	R_F = tmp8 | z_b_t[R_A];\
 }
 
@@ -94,10 +94,10 @@ static byte swap_t[256];
 
 //#define PUSHAF { R_SP -= 2;\
 tmp32=R_AF&0xFF00 | (R_F&ZF?0x80:0)|(R_F&NF?0x40:0)|(R_F&HF?0x20:0)|(R_F&CF?0x10:0);\
-WR16(R_SP, (word)tmp32); }
+WR16(R_SP, (uint16_t)tmp32); }
 //#define POPAF  { tmp32 = RD16(R_SP);\
  tmp32=(tmp32&0xFF00) | (tmp32&0x80?ZF:0)|(tmp32&0x40?NF:0)|(tmp32&0x20?HF:0)|(tmp32&0x10?CF:0);\
- R_AF = (word)tmp32; R_SP += 2; }
+ R_AF = (uint16_t)tmp32; R_SP += 2; }
 
 // that's conversion to another R_F format, use if needed by any game
 
@@ -111,27 +111,27 @@ WR16(R_SP, (word)tmp32); }
 // 8 bit signed value assumed!!!
 #define ADDSPX(n)  \
     tmp32 = (unsigned)R_SP + (signed)(signed char)n;\
-    R_F = (byte)((tmp32&BFLAGSh | ((signed)(signed char)n^tmp32^R_SP)&HFh)>>8\
+    R_F = (uint8_t)((tmp32&BFLAGSh | ((signed)(signed char)n^tmp32^R_SP)&HFh)>>8\
 		| (tmp32>>16)&CF);
 
-#define LDHLSP(n) { ADDSPX(n);R_HL = (word)tmp32; }
-#define ADDSP(n) { ADDSPX(n);R_SP = (word)tmp32; }
+#define LDHLSP(n) { ADDSPX(n);R_HL = (uint16_t)tmp32; }
+#define ADDSP(n) { ADDSPX(n);R_SP = (uint16_t)tmp32; }
 
 // 8 or 16 bit unsigned value assumed
 #define ADDHL(n) { \
     tmp32 = (unsigned)R_HL + n; \
-	r_af.hl = (word)(r_af.hl&(ZFh|0xFF) | BFLAGSh&tmp32 |\
+	r_af.hl = (uint16_t)(r_af.hl&(ZFh|0xFF) | BFLAGSh&tmp32 |\
 		HFh & (tmp32^(unsigned)R_HL^n) | (tmp32>>8) & CFh);\
-    R_HL = (word)tmp32; }/*T*/
+    R_HL = (uint16_t)tmp32; }/*T*/
 
 #define ADD(n) { \
     tmp32 = (unsigned)R_A + n;\
-    r_af.hl = (word)(((HF & (tmp32^(unsigned)R_A^n))|z_b_t[(byte)tmp32])<<8 | tmp32/*CF*/); \
+    r_af.hl = (uint16_t)(((HF & (tmp32^(unsigned)R_A^n))|z_b_t[(uint8_t)tmp32])<<8 | tmp32/*CF*/); \
 }
 
 #define ADC(n) { \
     tmp32 = (unsigned)R_A + n + (R_F&CF);\
-    r_af.hl = (word)(((HF & (tmp32^(unsigned)R_A^n))|z_b_t[(byte)tmp32])<<8 | tmp32/*CF*/); \
+    r_af.hl = (uint16_t)(((HF & (tmp32^(unsigned)R_A^n))|z_b_t[(uint8_t)tmp32])<<8 | tmp32/*CF*/); \
 }
 
 
@@ -140,16 +140,16 @@ WR16(R_SP, (word)tmp32); }
 // TODO:check    I did just like Faizullin did, don't know if it right
 #define CP(n) { \
     tmp32 = (unsigned)R_A - (unsigned)n; \
-    R_F   = (byte)((HF & (tmp32^R_A^n)) | -(signed)(tmp32 >> 8)) | z_b_t[(byte)tmp32] | NF;\
+    R_F   = (uint8_t)((HF & (tmp32^R_A^n)) | -(signed)(tmp32 >> 8)) | z_b_t[(uint8_t)tmp32] | NF;\
 }
 
 #define SBC(n) { \
     tmp32 = (unsigned)R_A - (unsigned)n-(R_F&CF); \
-    R_F   = (byte)((HF & (tmp32^R_A^n)) | -(signed)(tmp32 >> 8)) | z_b_t[(byte)tmp32] | NF;\
-    R_A = (byte)tmp32;\
+    R_F   = (uint8_t)((HF & (tmp32^R_A^n)) | -(signed)(tmp32 >> 8)) | z_b_t[(uint8_t)tmp32] | NF;\
+    R_A = (uint8_t)tmp32;\
 }
 
-#define SUB(n) { CP(n);R_A = (byte)tmp32;}
+#define SUB(n) { CP(n);R_A = (uint8_t)tmp32;}
 
 
 #define AND(n) { R_A &= n; R_F = z_b_t[R_A] | HF; }
@@ -157,44 +157,44 @@ WR16(R_SP, (word)tmp32); }
 #define XOR(n) { R_A ^= n; R_F = z_b_t[R_A]; }
 
 
-#define INC(n) { n++; R_F = (byte)((R_F & CF) | inc_t[n]); }
-#define DEC(n) { n--; R_F = (byte)((R_F & CF) | dec_t[n]); }
+#define INC(n) { n++; R_F = (uint8_t)((R_F & CF) | inc_t[n]); }
+#define DEC(n) { n--; R_F = (uint8_t)((R_F & CF) | dec_t[n]); }
 
 #define RLCA(r) { \
-    r = (byte)(((unsigned)r >> 7) | ((unsigned)r << 1)); \
-    R_F = (byte)((R_F&ZF) _SETBF(r) | (r & CF)); }
+    r = (uint8_t)(((unsigned)r >> 7) | ((unsigned)r << 1)); \
+    R_F = (uint8_t)((R_F&ZF) _SETBF(r) | (r & CF)); }
 
 
 #define RRCA(r) { \
-	R_F = (R_F&ZF) | (byte)(r & CF);\
-	r = (byte)(((unsigned)r << 7) | ((unsigned)r >> 1)); \
+	R_F = (R_F&ZF) | (uint8_t)(r & CF);\
+	r = (uint8_t)(((unsigned)r << 7) | ((unsigned)r >> 1)); \
 	ADDBF(r); }
 #define RLA(r) { \
     tmp32 = (unsigned)r >> 7; \
-    r = (byte)((unsigned)r << 1) | (unsigned)(R_F & CF); \
-    R_F = (byte)((R_F&ZF) _SETBF(r) | tmp32);}
+    r = (uint8_t)((unsigned)r << 1) | (unsigned)(R_F & CF); \
+    R_F = (uint8_t)((R_F&ZF) _SETBF(r) | tmp32);}
 #define RRA(r) { \
     tmp32 = (unsigned)R_F<<7; \
-	R_F = (byte)((R_F&ZF) | (r & CF));\
-	r = (byte)(((unsigned)r >> 1) | tmp32);\
+	R_F = (uint8_t)((R_F&ZF) | (r & CF));\
+	r = (uint8_t)(((unsigned)r >> 1) | tmp32);\
 	ADDBF(r);}
 
 
 #define RLC(r) { \
-    r = (byte)(((unsigned)r >> 7) | ((unsigned)r << 1)); \
+    r = (uint8_t)(((unsigned)r >> 7) | ((unsigned)r << 1)); \
     R_F = z_b_t[r] | (r & CF); }
 #define RRC(r) { \
 	R_F = r & CF;\
-	r = (byte)(((unsigned)r << 7) | ((unsigned)r >> 1)); \
+	r = (uint8_t)(((unsigned)r << 7) | ((unsigned)r >> 1)); \
 	R_F |= z_b_t[r]; }
 #define RL(r) { \
     tmp32 = (unsigned)r >> 7;/*pos. of CF flag*/ \
-    r = (byte)((unsigned)r << 1) | (unsigned)(R_F & CF); \
-    R_F = z_b_t[r] | (byte)(tmp32);}
+    r = (uint8_t)((unsigned)r << 1) | (unsigned)(R_F & CF); \
+    R_F = z_b_t[r] | (uint8_t)(tmp32);}
 #define RR(r) { \
     tmp32 = (unsigned)R_F<<7; \
 	R_F = r & CF;\
-	r = (byte)(((unsigned)r >> 1) | tmp32);\
+	r = (uint8_t)(((unsigned)r >> 1) | tmp32);\
 	R_F|=z_b_t[r];}
 
 
@@ -205,7 +205,7 @@ WR16(R_SP, (word)tmp32); }
 
 #define SRA(r) { \
 	R_F = (r & CF);\
-    r = (byte)((signed)(signed char)r>>1); \
+    r = (uint8_t)((signed)(signed char)r>>1); \
     R_F |= z_b_t[r]; }
 
 
@@ -313,13 +313,13 @@ in theory, interrupts must be checked:
 
 // TODO: optimize code fetch!!!!!!
 
-static byte fetch(void) {
+static uint8_t fetch(void) {
 	unsigned n=R_PC;
 	R_PC++;
 	return mem_r8[n>>9](n);
 }
 
-static word fetch16(void) {
+static uint16_t fetch16(void) {
 	unsigned n=R_PC;
 	R_PC+=2;
 	return mem_r8[n>>9](n)+(mem_r8[(n+1)>>9](n+1)<<8);
@@ -341,10 +341,10 @@ borderline typically represent CPU-independent events, such as:
 1: LCD mode changes(both LCD interrupts included)
 2: timer based interrupts
 */
-INTERFACE void gbz80_execute_until(unsigned long clk_nextevent)
+void gbz80_execute_until(unsigned long clk_nextevent)
 {
 	/* temporaries for calculations */
-byte tmp8;
+uint8_t tmp8;
 unsigned tmp32; 
 if(HALT) {gb_clk=clk_nextevent;return;}//clkmax;}
 while(gb_clk<clk_nextevent
@@ -419,7 +419,7 @@ OP(34) { tmp8 = RD(R_HL); INC(tmp8); WR(R_HL, tmp8); } // INC (HL)
 OP(35) {
 	tmp8 = RD(R_HL); DEC(tmp8); WR(R_HL, tmp8); } // DEC (HL)
 OP(36) { tmp8=FETCH();WR(R_HL, tmp8); }			// LD (HL),n
-OP(37) { R_F = (R_F & (byte)~(HF | NF)) | (byte)CF; }	// SCF
+OP(37) { R_F = (R_F & (uint8_t)~(HF | NF)) | (uint8_t)CF; }	// SCF
 OP(38) { JR(CF) } //JRC PC+n
 OP(39) { ADDHL(R_SP); }					// ADD HL,(SP)
 OP(3A) { R_A = RD(R_HL); R_HL--;}			// [GB] LD A,(HL--)
@@ -427,8 +427,8 @@ OP(3B) { R_SP--; }						// DEC SP
 OP(3C) { INC(R_A); }					// INC A
 OP(3D) { DEC(R_A); }					// DEC A
 OP(3E) { R_A = FETCH(); }				// LD A,n
-OP(3F) { R_F = ((R_F & (byte)(BFLAGS|ZF|CF)) |
-				(R_F&(byte)CF)<<(byte)(HF_POS-CF_POS)) ^ (byte)CF; }// CCF
+OP(3F) { R_F = ((R_F & (uint8_t)(BFLAGS|ZF|CF)) |
+				(R_F&(uint8_t)CF)<<(uint8_t)(HF_POS-CF_POS)) ^ (uint8_t)CF; }// CCF
 OP(40) {}								// LD B,B
 OP(41) { R_B = R_C; }					// LD B,C
 OP(42) { R_B = R_D; }					// LD B,D
@@ -847,7 +847,7 @@ OP(CD)
 opCD:
 { tmp32 = FETCH16();///RD16(R_PC);R_PC+=2;
 PUSH(r_pc);
-R_PC = (word)tmp32; }		// CALL
+R_PC = (uint16_t)tmp32; }		// CALL
 OP(CE) { tmp8 = FETCH(); ADC(tmp8); }		// ADC A,n
 OP(cf) { RST(0x08); }						// RST 8
 OP(D0) { if(!(R_F & CF)) goto opC9; else z80_clk -= 3; } // RETNC
@@ -930,7 +930,7 @@ OP(FF) { RST(0x38); }					// RST 38h
 static void filltables(void) {
 	unsigned i,p;
 	for(i=0;i<256;i++) {
-		swap_t[i] = (byte)((i<<4)|(i>>4));
+		swap_t[i] = (uint8_t)((i<<4)|(i>>4));
 		p = i&BFLAGS;
 		if(!i) p|=ZF;
 		z_b_t[i]=p;
@@ -939,7 +939,7 @@ static void filltables(void) {
 		dec_t[i] = (i&0xF)==0xF?  (p|HF)  : p;
 	}
 }
-INTERFACE void gbz80_init()
+void gbz80_init()
 {
 	filltables();  // This makes code more readable, editable & compressable :)
     R_PC = 0;

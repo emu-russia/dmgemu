@@ -2,18 +2,13 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <windows.h>
-
-/* module interface function marker */
-#define INTERFACE
 
 /* platform dependent function marker */
 #define PLAT
 
-/* GB related types */
-typedef unsigned char byte;
-typedef unsigned short word;
 #define MAXULONG (unsigned long)(-1)
 
 /* Interrupt flags*/

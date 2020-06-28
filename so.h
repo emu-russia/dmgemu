@@ -4,8 +4,8 @@ extern unsigned long so_clk_nextchange;
 // ALL internal clock variables are exported (to be wrapped in gb.c)
 
 
-byte so_read(byte);
-void so_write(byte, byte);
+uint8_t so_read(uint8_t);
+void so_write(uint8_t, uint8_t);
 
 void so_init(unsigned long);
 void so_shutdown();

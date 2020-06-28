@@ -11,4 +11,4 @@ extern unsigned long gb_clk;
 unsigned long gb_timerclk; // time before next timer interrupt
 extern unsigned long gb_divbase;
 extern unsigned long gb_timbase;
-extern byte gb_timshift;
+extern uint8_t gb_timshift;

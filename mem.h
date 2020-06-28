@@ -1,21 +1,21 @@
 /* ROM header */
 typedef struct {
-	byte	code[4];
-	word    logo[24];
-	char	title[16];
-	char	rsrv[3];
-	byte	type, romsize, ramsize;
-	byte	country, licensee;
-	byte	version;
-	byte	header_chk;
-	word	global_chk;
+	uint8_t		code[4];
+	uint16_t    logo[24];
+	char		title[16];
+	char		rsrv[3];
+	uint8_t		type, romsize, ramsize;
+	uint8_t		country, licensee;
+	uint8_t		version;
+	uint8_t		header_chk;
+	uint16_t	global_chk;
 } rom_header_t;
 
 extern rom_header_t *romhdr;
 
-extern byte vram[0x2000];
+extern uint8_t vram[0x2000];
 
-extern byte hram[0x200];
+extern uint8_t hram[0x200];
 
 
 // Gameboy Color palettes
@@ -83,14 +83,14 @@ extern byte hram[0x200];
 struct MemBank {
 	unsigned flags;
 	unsigned bank;
-	byte *ptr;
+	uint8_t*ptr;
 	unsigned z0;
 };
 
 extern struct Cartridge {
-	byte *data; // ROM data
-	byte *romdata; // ROM data
-	byte *ramdata; // RAM data
+	uint8_t*data; // ROM data
+	uint8_t*romdata; // ROM data
+	uint8_t*ramdata; // RAM data
 	unsigned rom_size;	// Size of ROM in bytes
 	unsigned ram_size;  // Size of RAM in bytes
 	unsigned rom_nbanks;   // Size of ROM in banks (mapper dependent)
@@ -109,12 +109,12 @@ extern struct Cartridge {
 void mem_init();
 void mem_shutdown();
 
-word mem_read16 (unsigned addr);
+uint16_t mem_read16 (unsigned addr);
 void mem_write16 (unsigned addr,unsigned d);
 
 
-typedef byte (mem_Read8)(unsigned);
-typedef void (mem_Write8)(unsigned, byte);
+typedef uint8_t(mem_Read8)(unsigned);
+typedef void (mem_Write8)(unsigned, uint8_t);
 typedef mem_Read8 *mem_Read8P;
 typedef mem_Write8 *mem_Write8P;
 
@@ -128,7 +128,7 @@ extern mem_Write8P  mem_w8 [128];
 
 #define RD(n) mem_r8[(unsigned)(n)>>9]((unsigned)(n))
 //#define WR(n, d) {unsigned t=n;byte dd=d;if(debug_canwrite) mem_w8[(unsigned)(t)>>9]((unsigned)(t),dd);}
-#define WR(n, d) mem_w8[(unsigned)(n)>>9]((unsigned)(n),(byte)(d));
+#define WR(n, d) mem_w8[(unsigned)(n)>>9]((unsigned)(n),(uint8_t)(d));
 
 #define RD16(n) mem_read16(n)
 //#define WR16(n, d) {unsigned t=n;word dd=d;if(debug_canwrite) mem_write16(t,dd);}

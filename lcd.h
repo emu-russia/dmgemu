@@ -14,4 +14,4 @@ extern unsigned mainpal[64];
 #define OBP1 (mainpal+8)
 
 PLAT extern unsigned benchmark_sound,benchmark_gfx;
-extern byte tilecache[512];
+extern uint8_t tilecache[512];

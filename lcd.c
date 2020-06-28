@@ -11,10 +11,10 @@ unsigned lcd_WYline;
 int lcd_fpslimit=1;
 int lcd_effect=1; // possible values: 0,1
 
-//static byte lcd_user_screen[144][160];
+//static uint8_t lcd_user_screen[144][160];
 
 unsigned mainpal[64];  // 0-3 BG palette 4-7,8-11 - sprite palettes
-static byte linebuffer[192]; // showed from 8-th byte
+static uint8_t linebuffer[192]; // showed from 8-th byte
 
 
 /*
@@ -58,7 +58,7 @@ static HGDIOBJ old_obj;
 //static RGBQUAD *pbuf;
 
 #ifdef GFX8BIT
-byte *pbuf;
+uint8_t *pbuf;
 #else
 RGBQUAD *pbuf;
 #endif
@@ -211,7 +211,7 @@ static void win32_dib_init(int width, int height)
 {
     HDC hdc;
     BITMAPINFO *bmi;
-    byte *DIB_base;
+	uint8_t *DIB_base;
 
 	bmi=(BITMAPINFO*)calloc(sizeof(BITMAPINFO)+16*4,1);
     main_hdc = hdc = GetDC(main_hwnd);
@@ -288,7 +288,7 @@ static void lcd_refresh(int line)
 
 void tilecache_init(void);
 
-PLAT INTERFACE void lcd_init() 
+PLAT void lcd_init() 
 {
 	tilecache_init();
     //memset(lcd_user_screen, 0, sizeof(lcd_user_screen));
@@ -299,7 +299,7 @@ PLAT INTERFACE void lcd_init()
 	lcd_WYline=-1;
 }
 
-PLAT INTERFACE void lcd_shutdown()
+PLAT void lcd_shutdown()
 {
     win32_dib_shutdown();
 }
@@ -307,7 +307,7 @@ PLAT INTERFACE void lcd_shutdown()
 // **********************************************************************
 
 typedef struct {
-    byte    y, x, n, a;
+	uint8_t    y, x, n, a;
 } SPR;
 
 //static SPR *spr = (SPR *)hram;
@@ -333,8 +333,8 @@ unsigned num_sprites = 0;
 #define DIR_XMIRROR 0x40
 
 
-byte tilecachedata[0x2000*4*2];
-byte tilecache[512];
+uint8_t tilecachedata[0x2000*4*2];
+uint8_t tilecache[512];
 unsigned long bitxlat_t[16],bitxlat2_t[16],bitxlatM_t[16],bitxlat2M_t[16];
 
 void tilecache_init(void) {
@@ -349,8 +349,8 @@ void tilecache_init(void) {
 	}
 }
 
-static byte* getcell(unsigned celln,unsigned dir) {
-	byte *dest=tilecachedata+((dir&0x40)<<9)+(celln<<6),*rp;
+static uint8_t* getcell(unsigned celln,unsigned dir) {
+	uint8_t*dest=tilecachedata+((dir&0x40)<<9)+(celln<<6),*rp;
 	unsigned long *wp;
 	register unsigned b0,b1;
 	unsigned i;
@@ -378,7 +378,7 @@ static byte* getcell(unsigned celln,unsigned dir) {
 }
 
 
-INTERFACE void lcd_enumsprites()
+void lcd_enumsprites()
 {
     unsigned h = ((R_LCDC & 4)<<1)+8;// ? (16) : (8); sprite height
 	unsigned line = (unsigned)(R_LY)+16;
@@ -415,16 +415,16 @@ INTERFACE void lcd_enumsprites()
 
 #ifdef LCD_NEW
 
-INTERFACE void lcd_refreshline(void) {
+void lcd_refreshline(void) {
 
 	signed char *tilemapptr;
-	byte *writeptr,*tmpptr;
+	uint8_t*writeptr,*tmpptr;
 	unsigned tileofs,tilepage,tilemapx;
 	unsigned X,Y,LY,WX,WY,i,j;
 	//unsigned tmp0,tmp1;
 	unsigned spriteh = ((R_LCDC & 4)<<1)+7;// sprite height
 	unsigned sprtilemask=~((R_LCDC & 4)>>2);
-	byte spr_pal,tmp;
+	uint8_t spr_pal,tmp;
 
 	//memset(tilecache,0,sizeof(tilecache));// TODO: SLOW!!! for debug only!!
 
@@ -513,12 +513,12 @@ INTERFACE void lcd_refreshline(void) {
 
 
 
-INTERFACE void lcd_refreshline()
+void lcd_refreshline()
 {
-    byte X, Y, WX, WY, LX, LY;
-    byte S, T, U, V;
-    byte tile, *tilemap;
-    word *tiledata, raw;
+	uint8_t X, Y, WX, WY, LX, LY;
+	uint8_t S, T, U, V;
+	uint8_t tile, *tilemap;
+	uint16_t*tiledata, raw;
     int P;
     int i, a, NS;
 
@@ -562,9 +562,9 @@ INTERFACE void lcd_refreshline()
             tile = *(tilemap + (T << 5) + S);
 
             if(R_LCDC & 0x10)
-                tiledata = (word *)&vram[tile << 4];
+                tiledata = (uint16_t *)&vram[tile << 4];
             else
-                tiledata = (word *)&vram[0x1000 + 16 * (char)tile];
+                tiledata = (uint16_t *)&vram[0x1000 + 16 * (char)tile];
 
             raw = tiledata[V];
             P = ((raw & 0xff) >> (7 - U)) & 1;
@@ -591,9 +591,9 @@ INTERFACE void lcd_refreshline()
         tile = *(tilemap + (T << 5) + S);
 
         if(R_LCDC & 0x10)
-            tiledata = (word *)&vram[tile << 4];
+            tiledata = (uint16_t *)&vram[tile << 4];
         else
-            tiledata = (word *)&vram[0x1000 + 16 * (char)tile];
+            tiledata = (uint16_t *)&vram[0x1000 + 16 * (char)tile];
 
         raw = tiledata[V];
         P = ((raw & 0xff) >> (7 - U)) & 1;
@@ -606,7 +606,7 @@ INTERFACE void lcd_refreshline()
 
     for(i=0; i<num_sprites; i++)
     {
-        tiledata = (word *)&vram[used_spr[i].n << 4];
+        tiledata = (uint16_t *)&vram[used_spr[i].n << 4];
 
         V = LY - (used_spr[i].y-16);
         a = used_spr[i].a;
@@ -655,7 +655,7 @@ INTERFACE void lcd_refreshline()
 
 
 
-PLAT INTERFACE void lcd_vsync()
+PLAT void lcd_vsync()
 {
     static int first = 1;
     static unsigned long frame = 1;

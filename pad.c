@@ -10,19 +10,19 @@
 #define VK_RIGHT	0x27
 #define VK_DOWN     0x28	
 
-PLAT INTERFACE void pad_init()
+PLAT void pad_init()
 {
 }
 
-PLAT INTERFACE void pad_shutdown()
+PLAT void pad_shutdown()
 {
 }
 
 // **********************************************************************
 
-PLAT INTERFACE byte pad_hi()
+PLAT uint8_t pad_hi()
 {
-    byte pad = 0;
+    uint8_t pad = 0;
 
     if(GetAsyncKeyState(VK_S) & 0x80000000) pad |= 8;      
 /* START */
@@ -39,9 +39,9 @@ PLAT INTERFACE byte pad_hi()
 }
 
 
-PLAT INTERFACE byte pad_lo()
+PLAT uint8_t pad_lo()
 {
-    byte pad = 0;
+    uint8_t pad = 0;
 
     if(GetAsyncKeyState(VK_DOWN) & 0x80000000) pad |= 8;    /* DOWN */
     if(GetAsyncKeyState(VK_UP) & 0x80000000) pad |= 4;      /* UP */
