@@ -41,10 +41,10 @@ F12 - Turn sound on/off (maybe buggy)<br>
 
 Some screenshots:<br>
 <br>
-<img src='http://ogamespec.com/imgstore/whc4e0b23f6744b0.jpg'>
-<img src='http://ogamespec.com/imgstore/whc4e0b23fd946e8.jpg'>
-<img src='http://ogamespec.com/imgstore/whc4e0b23ac916b8.jpg'>
-<img src='http://ogamespec.com/imgstore/whc4e0b23a683fc0.jpg'>
+<img src='/imgstore/whc4e0b23f6744b0.jpg'>
+<img src='/imgstore/whc4e0b23fd946e8.jpg'>
+<img src='/imgstore/whc4e0b23ac916b8.jpg'>
+<img src='/imgstore/whc4e0b23a683fc0.jpg'>
 
 Enjoy! :)<br>
 <br>
