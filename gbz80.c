@@ -92,12 +92,16 @@ static uint8_t swap_t[256];
 #define POP(n)  { n.l=RD(R_SP); R_SP++; n.h=RD(R_SP); R_SP++; }
 
 
-//#define PUSHAF { R_SP -= 2;\
+#if 0
+
+#define PUSHAF { R_SP -= 2;\
 tmp32=R_AF&0xFF00 | (R_F&ZF?0x80:0)|(R_F&NF?0x40:0)|(R_F&HF?0x20:0)|(R_F&CF?0x10:0);\
 WR16(R_SP, (uint16_t)tmp32); }
-//#define POPAF  { tmp32 = RD16(R_SP);\
+#define POPAF  { tmp32 = RD16(R_SP);\
  tmp32=(tmp32&0xFF00) | (tmp32&0x80?ZF:0)|(tmp32&0x40?NF:0)|(tmp32&0x20?HF:0)|(tmp32&0x10?CF:0);\
  R_AF = (uint16_t)tmp32; R_SP += 2; }
+
+#endif
 
 // that's conversion to another R_F format, use if needed by any game
 
