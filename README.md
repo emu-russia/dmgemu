@@ -4,7 +4,7 @@
 
 Siliconporn community made another high-res images of top metal:
 
-http://siliconpr0n.org/map/nintendo/dmg-cpu_b/
+http://siliconpr0n.org/map/nintendo/dmg-cpu-b/
 
 ## NEWS!
 
