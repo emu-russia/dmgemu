@@ -1,8 +1,6 @@
 /* GameBoy LCD emulation (win32) */
 #include "pch.h"
 
-#define LCD_NEW
-
 unsigned lcd_WYline;
 int lcd_fpslimit=1;
 int lcd_effect=1; // possible values: 0,1
@@ -409,8 +407,6 @@ void lcd_enumsprites()
 // **********************************************************************
 
 
-#ifdef LCD_NEW
-
 void lcd_refreshline(void) {
 
 	signed char *tilemapptr;
@@ -504,151 +500,6 @@ void lcd_refreshline(void) {
 	lcd_refresh(LY);
 	benchmark_gfx+=GetTimer();
 }
-
-#else
-
-
-
-void lcd_refreshline()
-{
-	uint8_t X, Y, WX, WY, LX, LY;
-	uint8_t S, T, U, V;
-	uint8_t tile, *tilemap;
-	uint16_t*tiledata, raw;
-	int P;
-	int i, a, NS;
-
-	benchmark_gfx-=GetTimer();
-	if(!(R_LCDC & 0x80))
-	{
-		LY = R_LY;
-
-		for(LX=0; LX<160; LX++)
-			linebuffer[LX+8] = 0;
-
-		return;
-	}
-
-	__log("LY %i", R_LY);
-
-	/* background */
-
-	LY = R_LY;
-	X = R_SCX;
-	Y = LY + R_SCY;
-
-	WY = R_WY;
-	if((R_LCDC & 0x20) && (LY >= WY))
-	{
-		if(R_WX <= 7) WX = 0;
-		else WX = R_WX - 7;
-	}
-	else WX = 160;
-
-	if(R_LCDC & 1)
-	{
-		for(LX=0; LX<WX; LX++,X++)
-		{
-			S = X >> 3;
-			T = Y >> 3;
-			U = X & 7;
-			V = Y & 7;
-
-			tilemap = &vram[(R_LCDC & 8) ? 0x1c00 : 0x1800];
-			tile = *(tilemap + (T << 5) + S);
-
-			if(R_LCDC & 0x10)
-				tiledata = (uint16_t *)&vram[tile << 4];
-			else
-				tiledata = (uint16_t *)&vram[0x1000 + 16 * (char)tile];
-
-			raw = tiledata[V];
-			P = ((raw & 0xff) >> (7 - U)) & 1;
-			P |= (((raw >> 8) >> (7 - U)) << 1) & 2;
-
-			linebuffer[LX+8] = BGP[P];
-		}
-	}
-	else LX = WX;
-
-	/* window */
-
-	X = 0;
-	Y = LY - WY;
-
-	for(LX; LX<160; LX++,X++)
-	{
-		S = X >> 3;
-		T = Y >> 3;
-		U = X & 7;
-		V = Y & 7;
-
-		tilemap = &vram[(R_LCDC & 0x40) ? 0x1c00 : 0x1800];
-		tile = *(tilemap + (T << 5) + S);
-
-		if(R_LCDC & 0x10)
-			tiledata = (uint16_t *)&vram[tile << 4];
-		else
-			tiledata = (uint16_t *)&vram[0x1000 + 16 * (char)tile];
-
-		raw = tiledata[V];
-		P = ((raw & 0xff) >> (7 - U)) & 1;
-		P |= (((raw >> 8) >> (7 - U)) << 1) & 2;
-
-		linebuffer[LX+8] = BGP[P];
-	}
-
-	/* sprites */
-
-	for(i=0; i<num_sprites; i++)
-	{
-		tiledata = (uint16_t *)&vram[used_spr[i].n << 4];
-
-		V = LY - (used_spr[i].y-16);
-		a = used_spr[i].a;
-
-		if(a & SPR_FLIPY)
-		{
-			if(R_LCDC & 4) V = (15 - V) & 0xf;
-			else V = (7 - V) & 7;
-		}
-
-		raw = tiledata[V];
-
-		for(U=0; U<8; U++)
-		{
-			if(a & SPR_FLIPX)
-			{
-				P = ((raw & 0xff) >> U) & 1;
-				P |= (((raw >> 8) >> U) << 1) & 2;
-			}
-			else
-			{
-				P = ((raw & 0xff) >> (7 - U)) & 1;
-				P |= (((raw >> 8) >> (7 - U)) << 1) & 2;
-			}
-
-			LX = used_spr[i].x-8+U;
-
-			if((a & SPR_PRI) && (linebuffer[LX+8]))
-				continue;
-			
-			if(P)
-			{
-				linebuffer[LX+8] = (a & SPR_PAL) ? OBP1[P] : OBP0[P];
-			}
-		}
-	}
-
-	lcd_refresh(LY);
-	benchmark_gfx+=GetTimer();
-}
-
-#endif
-
-
-
-
 
 
 PLAT void lcd_vsync()
