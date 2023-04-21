@@ -113,7 +113,7 @@ static void win32_win_init(int width, int height)
 	RECT rect;
 	int w, h;
 
-	sprintf(title, "GameBoy -- %s", romhdr->title);
+	sprintf(title, "GameBoy - %s", romhdr->title);
 
 	wc.cbClsExtra = wc.cbWndExtra = 0;
 	wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
