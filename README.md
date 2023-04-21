@@ -1,28 +1,10 @@
 # Nintendo GameBoy Emulator
 
-## Update
-
-Siliconporn community made another high-res images of top metal:
-
-http://siliconpr0n.org/map/nintendo/dmg-cpu-b/
-
-## NEWS!
-
-We've got first high-resolution images of DMG-CPU:
-
-```<img src='http://psxdev.ru//images/wys/TS_01_12_17_25_17.jpg'>```
-
-(Credits: Zeptobars)
-
-It is made as 2-metal CMOS in standard cells + custom memory/registers blocks.
-
-## Project Overview
-
 This is original "black-and-white" GameBoy (DMG-01) emulator.
 It supports variety of mappers, boot from internal ROM and has nice-looking LCD effect.
 Compatibility is pretty high.
 
-It is very portable with minimal code modifications and can be used for educational purposes.<br>
+It is very portable with minimal code modifications and can be used for educational purposes.
 
 Controls in Windows:
 - Arrows: Arrows %)
@@ -49,5 +31,3 @@ Enjoy! :smile:
 Thanks to `E}|{`, for invaluable help with LCD and sound!
 
 Thanks to Gumpei Yokoi for this great handheld system and Nintendo for bunch of really awesome games.
-
-*This project can be revived on new level, since I sent DMG-CPU to decaping.*

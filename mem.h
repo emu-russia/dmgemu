@@ -1,3 +1,5 @@
+#pragma once
+
 /* ROM header */
 typedef struct {
 	uint8_t		code[4];

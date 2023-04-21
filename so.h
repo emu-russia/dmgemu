@@ -1,3 +1,5 @@
+#pragma once
+
 //extern unsigned long so_clk;  - same as gb_clk now
 extern unsigned long so_clk_inner[2];
 extern unsigned long so_clk_nextchange;

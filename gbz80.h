@@ -1,3 +1,5 @@
+#pragma once
+
 #define BIGENDIAN
 
 union Z80reg {
@@ -39,7 +41,7 @@ extern unsigned HALT, IME;
 #define R_H r_hl.h
 #define R_L r_hl.l
 
-/* флаги */
+/* flags */
 
 #define SF_POS 7 
 #define ZF_POS 6 
