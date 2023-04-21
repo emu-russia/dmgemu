@@ -1,3 +1,5 @@
+#pragma once
+
 void lcd_init();
 void lcd_shutdown();
 void lcd_enumsprites();

@@ -1,3 +1,5 @@
+#pragma once
+
 void sys_error(char *, ...);
 void rand_init();
 void load_game(char *);
