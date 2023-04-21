@@ -100,7 +100,7 @@ void plat_init()
 // **********************************************************************
 
 /* platform Entry-point */
-PLAT int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
+PLAT int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
 	ParseCommandLine(lpCmdLine);
 	plat_init();

@@ -669,6 +669,7 @@ PLAT void lcd_vsync()
 
 	time=GetTimer();
 	if(lcd_fpslimit) while((time=GetTimer()) < 1000000/60) ;
+	else while ((time = GetTimer()) < 1000000/1000);		// Limited to 1000 FPS
 	Timer();
 	oldtime[timepos][0]=time;
 	oldtime[timepos][1]=benchmark_gfx;
