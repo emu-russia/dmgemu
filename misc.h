@@ -9,4 +9,3 @@ void save_SRAM(uint8_t*, long);
 void log_init(char *);
 void log_shutdown();
 void __log(char *, ...);
-void create_vram_image();

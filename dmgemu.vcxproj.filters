@@ -11,31 +11,37 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="gb.c">
+    <ClCompile Include="gb.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="gbz80.c">
+    <ClCompile Include="sm83.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="lcd.c">
+    <ClCompile Include="introm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="main.c">
+    <ClCompile Include="ppu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="mem.c">
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="misc.c">
+    <ClCompile Include="mem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="pad.c">
+    <ClCompile Include="misc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="perftimer.c">
+    <ClCompile Include="pad.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="so.c">
+    <ClCompile Include="pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="perftimer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="apu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -43,13 +49,10 @@
     <ClInclude Include="gb.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="gbemu.h">
+    <ClInclude Include="sm83.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="gbz80.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="lcd.h">
+    <ClInclude Include="ppu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="mem.h">
@@ -64,7 +67,13 @@
     <ClInclude Include="perftimer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="so.h">
+    <ClInclude Include="apu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="introm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
