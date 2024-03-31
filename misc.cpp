@@ -7,7 +7,7 @@
 void sys_error(char *fmt, ...)
 {
 	va_list	arg;
-	char	buf[0x10000]; 
+	char	buf[0x1000];
 
 	va_start(arg, fmt);
 	vsprintf(buf, fmt, arg);
@@ -82,7 +82,7 @@ PLAT void show_regs()
 }
 
 /* load battery-backed/onboard RAM */
-PLAT void load_SRAM(u_char *ram_ptr, long size)
+PLAT void load_SRAM(uint8_t* ram_ptr, long size)
 {
 	FILE *f;
 	long i;
@@ -103,7 +103,7 @@ PLAT void load_SRAM(u_char *ram_ptr, long size)
 }
 
 /* save battery-backed/onboard RAM */
-PLAT void save_SRAM(u_char *ram_ptr, long size)
+PLAT void save_SRAM(uint8_t* ram_ptr, long size)
 {
 	FILE *f;
 	char name[128];

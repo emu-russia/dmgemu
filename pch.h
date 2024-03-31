@@ -27,9 +27,9 @@
 /* project includes */
 #include "misc.h"
 #include "mem.h"
-#include "gbz80.h"
-#include "lcd.h"
-#include "so.h"
+#include "sm83.h"
+#include "ppu.h"
+#include "apu.h"
 #include "pad.h"
 #include "gb.h"
 #include "introm.h"

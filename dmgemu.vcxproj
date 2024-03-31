@@ -76,7 +76,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <Optimization>Disabled</Optimization>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -101,7 +101,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <Optimization>Disabled</Optimization>
       <OmitFramePointers>false</OmitFramePointers>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -125,7 +125,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -150,7 +150,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -169,9 +169,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="gb.cpp" />
-    <ClCompile Include="gbz80.cpp" />
+    <ClCompile Include="sm83.cpp" />
     <ClCompile Include="introm.cpp" />
-    <ClCompile Include="lcd.cpp" />
+    <ClCompile Include="ppu.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mem.cpp" />
     <ClCompile Include="misc.cpp" />
@@ -183,19 +183,24 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="perftimer.cpp" />
-    <ClCompile Include="so.cpp" />
+    <ClCompile Include="apu.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gb.h" />
     <ClInclude Include="introm.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="gbz80.h" />
-    <ClInclude Include="lcd.h" />
+    <ClInclude Include="sm83.h" />
+    <ClInclude Include="ppu.h" />
     <ClInclude Include="mem.h" />
     <ClInclude Include="misc.h" />
     <ClInclude Include="pad.h" />
     <ClInclude Include="perftimer.h" />
-    <ClInclude Include="so.h" />
+    <ClInclude Include="apu.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="thirdparty\SDL2\VisualC\SDL\SDL.vcxproj">
+      <Project>{81ce8daf-ebb2-4761-8e45-b71abcca8c68}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

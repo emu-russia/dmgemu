@@ -1,4 +1,4 @@
-﻿// GBZ80 interpreter
+﻿// SM83 interpreter
 #include "pch.h"
 
 #define USEBFLAGS
@@ -14,7 +14,7 @@
 #define _SETBF(r)
 #endif
 
-/* контекст GBZ80 */
+/* SM83 Context */
 union Z80reg r_af, r_bc, r_de, r_hl;
 union Z80reg r_sp, r_pc;
 unsigned HALT, IME;
@@ -346,17 +346,9 @@ void gbz80_execute_until(unsigned long clk_nextevent)
 uint8_t tmp8;
 unsigned tmp32; 
 if(HALT) {gb_clk=clk_nextevent;return;}//clkmax;}
-while(gb_clk<clk_nextevent
-#ifdef VGB_VERIFY
-&& !HALT
-#endif
-	  ) { //TODO: && !HALT move HALT check back after testing
+while(gb_clk<clk_nextevent) {
 		register unsigned opcode;
 		unsigned z80_clk;
-#ifdef VGB_VERIFY
-	vgb_store();	// Save current state to VGB Z80 core
-	debug_canwrite = 0;  // Disable writing to memory/ports
-#endif
 		opcode = FETCH();
 		z80_clk = base_clk_t[opcode];
 		switch(opcode) {
@@ -484,11 +476,7 @@ OP(74) { WR(R_HL, R_H); }				// LD (HL),H
 OP(75) { WR(R_HL, R_L); }				// LD (HL),L
 OP(76) { HALT = 1;
 gb_clk = clk_nextevent; // set counters to their end value
-#ifndef VGB_VERIFY
 return;
-#else
-break; // In verification mode check must occur before exiting
-#endif
 
 }					// HALT
 OP(77) { WR(R_HL, R_A); }				// LD (HL),A
@@ -859,9 +847,7 @@ OP(D6) { tmp8 = FETCH(); SUB(tmp8); }	// SUB A,n
 OP(D7) { RST(0x10); }					// RST 10h
 OP(D8) { if(R_F & CF) goto opC9; else z80_clk -= 3; } // RETC
 OP(D9) { POP(r_pc); IME = INT_ALL;
-#ifndef VGB_VERIFY
 check4int();
-#endif
 }			// [GB]	IRET
 OP(DA) { if(R_F & CF) R_PC = FETCH16(); else {R_PC += 2; z80_clk--;} } // JPC nn
 OP(DB) {Undefined();}			// [GB] not implemented
@@ -899,9 +885,7 @@ OP(F9) { R_SP = R_HL; }					// LD SP,HL
 OP(FA) { 
 	tmp32 = FETCH16();R_A = RD(tmp32); }// [GB] LD A,(nn)
 OP(FB) { IME = INT_ALL;
-#ifndef VGB_VERIFY
 check4int();
-#endif
 }						// EI   (=STI)
 OP(FC) {Undefined();}			// [GB] NOT implemented
 OP(FD) {Undefined();}			// [GB] NOT implemented
@@ -915,12 +899,6 @@ OP(FF) { RST(0x38); }					// RST 38h
 		 to gb.c. As result one slow memory->memory addition will be removed
 */
 		//__log("Op %.2X",opcode);
-
-#ifdef VGB_VERIFY
-		debug_canwrite = 1;	// Enable writing
-		vgb_compare();		// Execute one instruction in VGB Z80 core, compare results
-		check4int();		// Check for interrupt
-#endif
 	}
 }
 
@@ -942,8 +920,5 @@ void gbz80_init()
 {
 	filltables();  // This makes code more readable, editable & compressable :)
 	R_PC = 0;
-#ifdef VGB_VERIFY
-	vgbz80_init();
-#endif
 	HALT = IME = 0;
 }
