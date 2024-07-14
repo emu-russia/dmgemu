@@ -319,7 +319,7 @@ uint8_t mem_r8_IO(unsigned addr) {
 	__log("HRD %.4X [PC=%.4X]", addr, R_PC);
 	if(addr >= 0xff00) {
 		if(RANGE(addr, 0xff10, 0xff3f))
-			return so_read((uint8_t)(addr & 0xff));
+			return apu_read((uint8_t)(addr & 0xff));
 		switch(addr & 0xff) {
 		case 0x00 : 
 			{
@@ -354,7 +354,7 @@ void mem_w8_IO(unsigned addr, uint8_t data) {
 
 	if(addr>=0xFF00) { // OAM or hram?
 		if(RANGE(addr, 0xff10, 0xff3f)) {
-			so_write((uint8_t)(addr & 0xff), data);
+			apu_write((uint8_t)(addr & 0xff), data);
 			return;
 		}
 		switch(addr & 0xff) {

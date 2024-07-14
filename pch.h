@@ -30,6 +30,7 @@
 #include "sm83.h"
 #include "ppu.h"
 #include "apu.h"
+#include "sound.h"
 #include "pad.h"
 #include "gb.h"
 #include "introm.h"

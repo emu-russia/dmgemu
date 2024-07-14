@@ -9,18 +9,18 @@ void gb_init()
 	gbz80_init();
 	pad_init();
 	lcd_init(); 
-	so_init(44100);
-	 __log("init OK.");
+	apu_init(44100);
+	__log("init OK.");
 }
 
 /* run on emu shutdown */
 void gb_shutdown()
 {
-	 mem_shutdown();
+	mem_shutdown();
 	pad_shutdown();
-	//so_shutdown();
+	apu_shutdown();
 	lcd_shutdown();
-	 log_shutdown();
+	log_shutdown();
 }
 
 // **********************************************************************
@@ -136,10 +136,10 @@ void start()
 		if(gb_eventclk > (4<<28)) { // wrap _ALL_ counters
 			gb_clk			-=(3<<28);
 			gb_eventclk		-=(3<<28);
-			so_clk_inner[1] -=(3<<28);
-			so_clk_nextchange-=(3<<28);
+			apu_clk_inner[1] -=(3<<28);
+			apu_clk_nextchange-=(3<<28);
 			if(gb_timerclk<MAXULONG) gb_timerclk-=(3<<28);
 		}
-		so_mix();
+		apu_mix();
 	 }
 }
