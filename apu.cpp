@@ -1,323 +1,8 @@
-/* GameBoy SO (sound output) terminal emulation */
+// GameBoy APU emulation
 #include "pch.h"
 
 /* Warning! like in core, sound clock is incremented
 at rate of 1048576Hz, not 1048576*4 Hz*/
-
-typedef struct
-{
-	int hz, len;
-	int stereo;
-	uint8_t *buf;
-	int pos;
-} PCM;
-
-PCM pcm;
-static FILE *pcm_dump;
-
-void so_reset();
-
-#define WAV_CHANNELS            2
-#define WAV_SAMPLEBITS          8
-#define WAV_BUFFER_SIZE         6144
-
-
-#define THRESHOLD1 (pcm.len*2)
-#define THRESHOLD2 (pcm.len*4)
-
-#define NBUFFERS 3
-
-
-
-HWAVEOUT hWaveOut;
-
-
-DWORD gSndBufSize;
-
-/* Additional definitions by E}I{
-
-*/
-
-struct WBuffer {
-	HGLOBAL hWaveHdr;
-	LPWAVEHDR lpWaveHdr;
-	HANDLE hData;
-	HPSTR lpData;
-} wavebuffer[NBUFFERS];
-
-int wb_current,wb_free;
-
-
-
-int pcm_submit(void);
-void CALLBACK BufferFinished(  HWAVEOUT hwo,        UINT uMsg,         
-						  DWORD dwInstance,    DWORD dwParam1,      DWORD dwParam2);
-
-/*
-==================
-FreeWaveBuffer
-==================
-*/
-void FreeWaveBuffer (struct WBuffer *w) {
-	
-// I wanted to make check for DONE flag, but it should be on because of "Reset" 
-
-	if (w->lpWaveHdr /*&& w->lpWaveHdr->dwFlags & WHDR_PREPARED*/)
-			waveOutUnprepareHeader (hWaveOut, w->lpWaveHdr, sizeof(WAVEHDR));
-	if (w->hWaveHdr)
-		{
-			__log( "...freeing WAV header\n" );
-			GlobalUnlock(w->hWaveHdr);
-			GlobalFree(w->hWaveHdr);
-		}
-
-		if (w->hData)
-		{
-			__log( "...freeing WAV buffer\n" );
-			GlobalUnlock(w->hData);
-			GlobalFree(w->hData);
-		}
-	memset(w,0,sizeof(*w));
-}
-
-/*
-==================
-AllocWaveBuffer
-==================
-*/
-
-void FreeSound (void);
-
-void AllocWaveBuffer (struct WBuffer *w) {
-
-	//int i;
-	FreeWaveBuffer(w);	// Who knows :)
-
-	__log ("...allocating waveform buffer: ");
-	
-	if (!(w->hData = GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE | GMEM_ZEROINIT, gSndBufSize))) 
-	{ 
-		__log( "\t failed\n" );
-		FreeSound ();
-		return; 
-	}
-	__log( "\tok\n" );
-
-	__log ("...locking waveform buffer: ");
-	if (!(w->lpData = (HPSTR)GlobalLock(w->hData)))
-	{ 
-		__log( "\t failed\n" );
-		FreeSound ();
-		return; 
-	} 
-	//memset (w->lpData, 0, gSndBufSize); 
-	__log( "\tok\n" );
-
-	/* 
-	 * Allocate and lock memory for the header. This memory must 
-	 * also be globally allocated with GMEM_MOVEABLE and 
-	 * GMEM_SHARE flags. 
-	 */ 
-	__log ("...allocating waveform header: ");
-	
-	if ((w->hWaveHdr = GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE | GMEM_ZEROINIT, 
-		(DWORD) sizeof(WAVEHDR))) == NULL)
-	{ 
-		__log( "\tfailed\n" );
-		FreeSound ();
-		return; 
-	} 
-	__log( "\tok\n" );
-
-	__log ("...locking waveform header: ");
-	 
-	
-	if ((w->lpWaveHdr = (LPWAVEHDR) GlobalLock(w->hWaveHdr)) == NULL)
-	{ 
-		__log( "\tfailed\n" );
-		FreeSound ();
-		return; 
-	}
-	//memset (w->lpWaveHdr, 0, sizeof(WAVEHDR));
-	__log( "\tok\n" );
-
-
-}
-
-/*
-==================
-FreeSound
-==================
-*/
-
-void FreeSound (void)
-{
-	int i;
-	__log( "Shutting down sound system\n" );
-
-	if ( hWaveOut )
-	{
-		__log( "...resetting waveOut\n" );
-		waveOutReset (hWaveOut);
-
-		for(i=0;i<NBUFFERS;i++) FreeWaveBuffer(wavebuffer+i);
-
-		__log( "...closing waveOut\n" );
-		waveOutClose (hWaveOut);
-
-	
-
-	}
-}
-
-
-void CALLBACK BufferFinished(  HWAVEOUT hwo,        UINT uMsg,         
-						  DWORD dwInstance,    DWORD dwParam1,      DWORD dwParam2) {
-	if(uMsg == WOM_DONE) {
-		wb_free++;
-		pcm_submit();
-	}
-}
-
-void PlayWaveBuffer (struct WBuffer *w)
-{
-	/* After allocation, set up and prepare headers. */ 
-	if(!w->lpWaveHdr) return;
-	if(!w->lpWaveHdr->dwBufferLength ||	// 1-st time usage
-		w->lpWaveHdr->dwFlags & WHDR_DONE) { // only use this block if done
-		waveOutUnprepareHeader(hWaveOut, w->lpWaveHdr, sizeof(WAVEHDR) );
-		w->lpWaveHdr->dwFlags = 0;
-		w->lpWaveHdr->dwBufferLength = gSndBufSize;
-		w->lpWaveHdr->lpData = w->lpData;
-		if (waveOutPrepareHeader(hWaveOut, w->lpWaveHdr, sizeof(WAVEHDR)) !=
-				MMSYSERR_NOERROR) {
-		__log ("waveOutPrepareHeader failed\n");
-		//FreeSound ();
-		return;
-		}
-		if(waveOutWrite(hWaveOut, w->lpWaveHdr, sizeof(WAVEHDR)) == MMSYSERR_NOERROR) {
-			wb_free--; // decrement number of free buffers
-		}
-	}
-}
-/*
-==================
-SNDDM_InitWav
-
-Crappy windows multimedia base
-==================
-*/
-int SNDDMA_InitWav (unsigned long freq)
-{
-	WAVEFORMATEX  format; 
-	HRESULT         hr;
-	unsigned int i;
-
-	__log( "Initializing wave sound\n" );
-
-	memset (&format, 0, sizeof(format));
-	format.wFormatTag = WAVE_FORMAT_PCM;
-	format.nChannels = WAV_CHANNELS;
-	format.wBitsPerSample = WAV_SAMPLEBITS;
-	format.nSamplesPerSec = freq;
-	format.nBlockAlign = format.nChannels * format.wBitsPerSample / 8;	// =1 :) E}I{
-	format.cbSize = 0;
-	format.nAvgBytesPerSec = format.nSamplesPerSec * format.nBlockAlign; 
-	
-	/* Open a waveform device for output using window callback. */ 
-	__log ("...opening waveform device: ");
-	while ((hr = waveOutOpen((LPHWAVEOUT)&hWaveOut, WAVE_MAPPER, 
-					&format, 
-					(DWORD_PTR)BufferFinished, 0L, CALLBACK_FUNCTION)) != MMSYSERR_NOERROR)
-	{
-		if (hr != MMSYSERR_ALLOCATED)
-		{
-			__log ("\tfailed\n");
-			return 0;
-		}
-
-		if (MessageBox (NULL,
-						"The sound hardware is in use by another app.\n\n"
-						"Select Retry to try to start sound again or Cancel to run emulator without sound.",
-						"Sound not available",
-						MB_RETRYCANCEL | MB_SETFOREGROUND | MB_ICONEXCLAMATION) != IDRETRY)
-		{/* Quake 2 znachit? :) A ya dumal iz MSDN-ovskogo helpa, tam to zhe samoe
-		 chast' etoy labudy s vydeleniem pamyati-fignya, u menya(i ne tol'ko u menya) malloc rabotal otlichno
-		 (t.e. zachem vydelyat' MOVEABLE block, a zatem vse ravno ego permanantno GlobalLock?  )
-		 */
-			__log ("\thw in use\n" );
-			return 0;
-		}
-	} 
-	__log( "\tok\n" );
-
-	waveOutReset(hWaveOut);
-
-	/* 
-	 * Allocate and lock memory for the waveform data. The memory 
-	 * for waveform data must be globally allocated with 
-	 * GMEM_MOVEABLE and GMEM_SHARE flags. 
-
-	*/ 
-	gSndBufSize = WAV_BUFFER_SIZE;
-	//for (i = 1; i < gSndBufSize; i <<= 1);
-	//gSndBufSize = i;
-	for(i=0;i<NBUFFERS;i++) AllocWaveBuffer(wavebuffer+i);
-	
-	wb_free = NBUFFERS;
-	pcm.pos = 0;
-	wb_current = 0;
-	pcm.stereo = WAV_CHANNELS - 1;
-	pcm.hz = freq;
-	pcm.len = gSndBufSize;//WAV_BUFFER_SIZE;
-
-	return 1;
-}
-
-/*
-==============
-psm_submit aka SNDDMA_Submit
-
-Send sound to device if buffer isn't really the dma buffer
-===============
-*/
-
-
-int pcm_submit(void)
-{
-	int tmp;
-	//if(pcm_dump) fwrite(pcm.buf, 1, pcm.len, pcm_dump);
-
-	/* 
-	 * Now the data block can be sent to the output device. The 
-	 * waveOutWrite function returns immediately and waveform 
-	 * data is sent to the output device in the background. 
-	*/ 
-
-	
-	while( wb_free) {
-
-		tmp=pcm.pos-pcm.len;
-		if(tmp<0) {
-			memset(pcm.buf+pcm.pos,pcm.buf[pcm.pos-2],-tmp);
-			tmp = 0;
-		}
-		memcpy(wavebuffer[wb_current].lpData,pcm.buf,pcm.len);
-		//pcm.pos = 0;
-		if(tmp) memmove(pcm.buf,pcm.buf+pcm.len,tmp);
-		/*if(wb_free<NBUFFERS && tmp>THRESHOLD1) {
-			tmp-=(pcm.stereo+1)<<2;
-		}*/
-		if(tmp>THRESHOLD2) tmp=THRESHOLD2;
-		//pcm.pos = 0;
-		pcm.pos = tmp;
-		PlayWaveBuffer(wavebuffer+wb_current);
-		if(++wb_current>=NBUFFERS) wb_current=0;
-	}
-	return 0;
-}
-
-// **********************************************************************
 
 typedef struct
 {
@@ -336,30 +21,6 @@ typedef struct
 	sndchan ch[4];
 	uint8_t wave[16];
 } so;
-
-#define SO_FREQ (1<<20)
-
-#define RI_NR10 0x10
-#define RI_NR11 0x11
-#define RI_NR12 0x12
-#define RI_NR13 0x13
-#define RI_NR14 0x14
-#define RI_NR21 0x16
-#define RI_NR22 0x17
-#define RI_NR23 0x18
-#define RI_NR24 0x19
-#define RI_NR30 0x1A
-#define RI_NR31 0x1B
-#define RI_NR32 0x1C
-#define RI_NR33 0x1D
-#define RI_NR34 0x1E
-#define RI_NR41 0x20
-#define RI_NR42 0x21
-#define RI_NR43 0x22
-#define RI_NR44 0x23
-#define RI_NR50 0x24
-#define RI_NR51 0x25
-#define RI_NR52 0x26
 
 const static uint8_t dmgwave[16] =
 {
@@ -396,30 +57,35 @@ static uint8_t noise15[4096];
 
 static void makenoise(uint8_t *to,int nbits);
 
-PLAT void so_init(unsigned long freq)
+PLAT void apu_init(unsigned long freq)
 {
-	SNDDMA_InitWav(freq);
+	InitSound(freq);
 	makenoise(noise15,15);
 	makenoise(noise7,7);
 	
 	pcm.buf = (uint8_t *)malloc(WAV_BUFFER_SIZE*16*(pcm.stereo+1));
 	pcm_submit();
 
-//    pcm_dump = fopen("pcm.bin", "wb");
-	so_clk_inner[1]=0;
-	so_clk_inner[0] = gb_clk;
-	so_reset();
+//    pcm.dump = fopen("pcm.bin", "wb");
+	apu_clk_inner[1]=0;
+	apu_clk_inner[0] = gb_clk;
+	apu_reset();
 }
 
-PLAT void so_shutdown()
+PLAT void apu_shutdown()
 {
-	if(pcm_dump) fclose(pcm_dump);
+	apu_reset();
+	if (pcm.dump) {
+		fclose(pcm.dump);
+		pcm.dump = nullptr;
+	}
 	pcm.pos = 0;
 	FreeSound();
-	free(pcm.buf);
-	pcm.buf=NULL;
+	if (pcm.buf) {
+		free(pcm.buf);
+		pcm.buf = nullptr;
+	}
 	memset(&pcm, 0, sizeof(pcm));
-	so_reset();
 }
 
 // **********************************************************************
@@ -458,8 +124,8 @@ everything not noted here is updated immediately
 #define S3 (snd.ch[2])
 #define S4 (snd.ch[3])
 
-unsigned long so_clk_inner[2];
-unsigned long so_clk_nextchange;
+unsigned long apu_clk_inner[2];
+unsigned long apu_clk_nextchange;
 
 static void makenoise(uint8_t *to,int nbits) {
 	unsigned i,j,counter,acc,tmp;
@@ -505,7 +171,7 @@ static void s4_freq() {
 	if(OUT_FREQ) S4.freq = (SO_FREQ<<11)/(OUT_FREQ*divtab[R_NR43&7]) << 5 >> (R_NR43 >> 4); //17 bits frac
 }
 
-void so_dirty()
+void apu_dirty()
 {
 	s1_freq();
 	
@@ -526,7 +192,7 @@ void so_dirty()
 	s4_freq();
 }
 
-void so_off()
+void apu_off()
 {
 	memset(&snd.ch, 0, sizeof snd.ch);
 	/*memset(&S1, 0, sizeof S1);
@@ -551,10 +217,10 @@ void so_off()
 	R_NR50 = 0x77;
 	R_NR51 = 0xF3;
 	R_NR52 = 0xF1;
-	so_dirty();
+	apu_dirty();
 }
 
-void so_reset()
+void apu_reset()
 {
 	memset(&snd, 0, sizeof snd);
 	if (pcm.hz) {
@@ -562,37 +228,36 @@ void so_reset()
 		RATEHI = SO_FREQ / (OUT_FREQ=pcm.hz);  // higher part of rate
 		RATELO = ((SO_FREQ-RATEHI*OUT_FREQ) << 16)/OUT_FREQ; // lower 16 bits
 	}
-	// TODO: for SGB use another sound frequency(also for other counters including envelopes etc.)
 	
 	pcm.pos = 0;
-	so_clk_inner[0] = 0;
-	so_clk_inner[1] = gb_clk;
-	so_clk_nextchange = (gb_clk&~0xFFF)+0x1000; // 256 Hz divider
+	apu_clk_inner[0] = 0;
+	apu_clk_inner[1] = gb_clk;
+	apu_clk_nextchange = (gb_clk&~0xFFF)+0x1000; // 256 Hz divider
 	memcpy(WAVE, dmgwave, 16);
 	memcpy(&hram[0x100+0x30], WAVE, 16);
-	so_off();
+	apu_off();
 	R_NR52 |= 0x80;
 }
 
 // **********************************************************************
 
-uint8_t so_read(uint8_t r)
+uint8_t apu_read(uint8_t r)
 {
-	so_mix();
+	apu_mix();
 	return hram[0x100 + r];
 }
 
 
-void so_1off(void) {
+void apu_1off(void) {
 	S1.on = 0;R_NR52&=~1;
 }
-void so_2off(void) {
+void apu_2off(void) {
 	S2.on = 0;R_NR52&=~2;
 }
-void so_3off(void) {
+void apu_3off(void) {
 	S3.on = 0;R_NR52&=~4;
 }
-void so_4off(void) {
+void apu_4off(void) {
 	S4.on = 0;R_NR52&=~8;
 }
 
@@ -611,7 +276,7 @@ void s1_init()
 	S1.swfreq = 2047&*(unsigned short*)&R_NR13;
 	if(R_NR10&7) {
 		S1.swfreq+=S1.swfreq>>(R_NR10&7);
-		if(S1.swfreq>2047) so_1off();
+		if(S1.swfreq>2047) apu_1off();
 	}
 }
 
@@ -656,7 +321,7 @@ void s4_init()
 	S4.envol = R_NR42 >> 4;
 }
 
-void so_write(uint8_t r, uint8_t b)
+void apu_write(uint8_t r, uint8_t b)
 {
 	if (!(R_NR52 & 128) && r != RI_NR52) return;
 	if ((r & 0xF0) == 0x30)
@@ -665,7 +330,7 @@ void so_write(uint8_t r, uint8_t b)
 			WAVE[r-0x30] = hram[0x100+r] = b;
 		return;
 	}
-	so_mix();
+	apu_mix();
 	switch (r)
 	{
 	case RI_NR10:
@@ -680,7 +345,7 @@ void so_write(uint8_t r, uint8_t b)
 	case RI_NR12:
 		R_NR12 = b;
 		S1.envol = R_NR12 >> 4;
-		if((b&0xF8) == 0) so_1off();  // Forced OFF mode(as stated in patent docs) if 0 and down
+		if((b&0xF8) == 0) apu_1off();  // Forced OFF mode(as stated in patent docs) if 0 and down
 		//S1.endir = (R_NR12>>3) & 1;
 		//S1.endir |= S1.endir - 1;
 		break;
@@ -699,7 +364,7 @@ void so_write(uint8_t r, uint8_t b)
 		break;
 	case RI_NR22:
 		R_NR22 = b;
-		if((b&0xF8) == 0) so_2off();  // Forced OFF mode(as stated in patent docs) if 0 and down
+		if((b&0xF8) == 0) apu_2off();  // Forced OFF mode(as stated in patent docs) if 0 and down
 		S2.envol = R_NR22 >> 4;
 		//S2.endir = (R_NR22>>3) & 1;
 		//S2.endir |= S2.endir - 1;
@@ -715,7 +380,7 @@ void so_write(uint8_t r, uint8_t b)
 		break;
 	case RI_NR30:
 		R_NR30 = b;
-		if (!(b & 128)) so_3off();
+		if (!(b & 128)) apu_3off();
 		break;
 	case RI_NR31:
 		R_NR31 = b;
@@ -741,7 +406,7 @@ void so_write(uint8_t r, uint8_t b)
 	case RI_NR42:
 		R_NR42 = b;
 		S4.envol = R_NR42 >> 4;
-		if((b&0xF8) == 0) so_4off();  // Forced OFF mode(as stated in patent docs) if 0 and down
+		if((b&0xF8) == 0) apu_4off();  // Forced OFF mode(as stated in patent docs) if 0 and down
 		break;
 	case RI_NR43:
 		R_NR43 = b;
@@ -761,7 +426,7 @@ void so_write(uint8_t r, uint8_t b)
 	case RI_NR52:
 		R_NR52 = b;
 		if (!(R_NR52 & 128))
-			so_off();
+			apu_off();
 		break;
 	default:
 		return;
@@ -784,16 +449,16 @@ TODO:
   for example: don't mix if both l&r outputs are disabled for a channel
   mono mixing can use some additional optimization.
 */
-void so_mix_basic(unsigned long so_clk_new) {
+void apu_mix_basic(unsigned long apu_clk_new) {
 	
 	uint8_t *s1_waveptr;
 	uint8_t *s2_waveptr;
 	int l,r,lr[4][2];
 	unsigned s;
 	unsigned long clk[2];
-	clk[0] = so_clk_inner[0];
-	clk[1] = so_clk_inner[1];
-	if(clk[1]>=so_clk_new) return;
+	clk[0] = apu_clk_inner[0];
+	clk[1] = apu_clk_inner[1];
+	if(clk[1]>= apu_clk_new) return;
 	s1_waveptr = (uint8_t*)(sqwave+((unsigned)R_NR11>>6));
 	s2_waveptr = (uint8_t*)(sqwave+((unsigned)R_NR21>>6));
 	//on[0]=R_NR52&S1.on;
@@ -862,23 +527,23 @@ void so_mix_basic(unsigned long so_clk_new) {
 		clk[0]+=RATELO;
 		clk[1]+=RATEHI+(clk[0]>>16);
 		clk[0]&=0xFFFF;			// 48 bit counter
-	} while (clk[1]<so_clk_new);
-	so_clk_inner[0] =  clk[0];
-	so_clk_inner[1] =  clk[1];
+	} while (clk[1]< apu_clk_new);
+	apu_clk_inner[0] =  clk[0];
+	apu_clk_inner[1] =  clk[1];
 }
 
 
-void so_mix(void) {
+void apu_mix(void) {
 	unsigned i,tmp,tmp2,swperiod,enperiod;
 	uint8_t *pt;
 	if(!pcm.buf) return;
 	benchmark_sound-=GetTimer();
-	while (so_clk_nextchange<(unsigned long)gb_clk) {
-		so_mix_basic(so_clk_nextchange);
+	while (apu_clk_nextchange<(unsigned long)gb_clk) {
+		apu_mix_basic(apu_clk_nextchange);
 		// Change envelopes,counters/etc----------------
 		// Sound length check (256 Hz)
 		if(R_NR52&128) {
-			if(!(so_clk_nextchange&0x1000) && (swperiod=R_NR10&0x70)) {
+			if(!(apu_clk_nextchange&0x1000) && (swperiod=R_NR10&0x70)) {
 				S1.swcnt = (S1.swcnt+1) & 7; // counts up(with possible overflow)
 				if(S1.swcnt == (swperiod>>4)) {  // Check sweep (128 Hz)
 					S1.swcnt = 0;
@@ -889,7 +554,7 @@ void so_mix(void) {
 						tmp -= tmp2;  // subtract freq (will never be <0)
 					else {
 						tmp += tmp2;  // add freq
-						if(tmp>=0x800) so_1off(); // stop at sweep overflow(stated in GB faq)
+						if(tmp>=0x800) apu_1off(); // stop at sweep overflow(stated in GB faq)
 					}
 					S1.swfreq = (tmp &= 0x7FF);
 					//*(unsigned short*)&R_NR13 = ((*(unsigned short*)&R_NR13)&~0x7FF)|tmp; // update freq (stated in GB faq)
@@ -899,15 +564,15 @@ void so_mix(void) {
 			}
 		// TODO: <=? or just =? (to emulate that bug)
 		if((R_NR14&0x40) && S1.cnt)   // Counter 1
-			if(--S1.cnt<=0) so_1off();
+			if(--S1.cnt<=0) apu_1off();
 		if ((R_NR24&0x40) && S2.cnt)	// Counter 2
-			if(--S2.cnt<=0) so_2off();
+			if(--S2.cnt<=0) apu_2off();
 		if ((R_NR34&0x40) && S3.cnt)	// Counter 3
-			if(--S3.cnt<=0) so_3off();
+			if(--S3.cnt<=0) apu_3off();
 		if ((R_NR44&0x40) && S4.cnt)	// Counter 4
-			if(--S4.cnt<=0) so_4off();
+			if(--S4.cnt<=0) apu_4off();
 
-		if(!(so_clk_nextchange&0x3000)) {  // Check envelopes (64 Hz)
+		if(!(apu_clk_nextchange&0x3000)) {  // Check envelopes (64 Hz)
 			// TODO: I think that envelope is wrapped over 15 when moving up, maybe I wrong
 			for(i=0;i<4;i++) if(i!=2) {
 				tmp = *(pt=(hram+0x112+i*5));//R_NR12;
@@ -939,11 +604,11 @@ void so_mix(void) {
 			}
 		}
 		//----------------------------------------------
-		so_clk_nextchange+=0x1000; // Warning, 14 lower buts must ALWAYS be 0
+		apu_clk_nextchange+=0x1000; // Warning, 14 lower buts must ALWAYS be 0
 		//if(wb_free > 0) pcm_submit();
 		}
 	}
-	so_mix_basic(gb_clk);
+	apu_mix_basic(gb_clk);
 	benchmark_sound+=GetTimer();
 	//if(wb_free > 0) pcm_submit();
 }

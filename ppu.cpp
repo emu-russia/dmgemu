@@ -67,7 +67,7 @@ RGBQUAD dib_pal[] = {
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	static int so_enabled = 1;
+	static int sound_enabled = 1;
 
 	switch(msg)
 	{
@@ -85,8 +85,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			{ 
 				case VK_ESCAPE: DestroyWindow(hwnd); break;
 				case VK_F12 :
-					(so_enabled) ? so_shutdown() : so_init(44100);
-					so_enabled ^= 1;
+					(sound_enabled) ? apu_shutdown() : apu_init(44100);
+					sound_enabled ^= 1;
 					break;
 				case VK_F8:
 					lcd_fpslimit^=1;

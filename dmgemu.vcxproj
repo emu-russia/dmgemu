@@ -184,6 +184,7 @@
     </ClCompile>
     <ClCompile Include="perftimer.cpp" />
     <ClCompile Include="apu.cpp" />
+    <ClCompile Include="sound.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gb.h" />
@@ -196,6 +197,7 @@
     <ClInclude Include="pad.h" />
     <ClInclude Include="perftimer.h" />
     <ClInclude Include="apu.h" />
+    <ClInclude Include="sound.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="thirdparty\SDL2\VisualC\SDL\SDL.vcxproj">
