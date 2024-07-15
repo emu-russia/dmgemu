@@ -1,7 +1,6 @@
 #pragma once
 
-#define SCALE 2
-
+extern int lcd_scale;
 extern int lcd_fpslimit;
 
 extern uint8_t linebuffer[192];

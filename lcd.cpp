@@ -1,6 +1,7 @@
 // platform crap (win32) - DIB-sections
 #include "pch.h"
 
+int lcd_scale = 4;
 int lcd_fpslimit = 1;
 int lcd_effect = 1; // possible values: 0,1
 
@@ -110,8 +111,8 @@ void win32_win_init(int width, int height)
 
 	rect.left = 0;
 	rect.top = 0;
-	rect.right = width * SCALE;
-	rect.bottom = height * SCALE;
+	rect.right = width * lcd_scale;
+	rect.bottom = height * lcd_scale;
 
 	AdjustWindowRect(&rect, WIN_STYLE, 0);
 
@@ -225,28 +226,28 @@ void win32_dib_shutdown()
 
 void win32_dib_blit()
 {
-#if (SCALE != 1)
+	if (lcd_scale != 1) {
 
-	StretchBlt(
-		main_hdc,
-		0, 0,
-		dib_width * SCALE, -dib_height * SCALE,
-		hdcc,
-		0, 0,
-		dib_width, -dib_height,
-		SRCCOPY);
+		StretchBlt(
+			main_hdc,
+			0, 0,
+			dib_width * lcd_scale, -dib_height * lcd_scale,
+			hdcc,
+			0, 0,
+			dib_width, -dib_height,
+			SRCCOPY);
+	}
+	else {
 
-#else
+		BitBlt(
+			main_hdc,
+			0, 0,
+			dib_width, -dib_height,
+			hdcc,
+			0, 0,
+			SRCCOPY);
 
-	BitBlt(
-		main_hdc,
-		0, 0,
-		dib_width, -dib_height,
-		hdcc,
-		0, 0,
-		SRCCOPY);
-
-#endif
+	}
 }
 
 void lcd_refresh(int line)
