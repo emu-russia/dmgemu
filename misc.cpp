@@ -29,7 +29,10 @@ void load_game(char *name)
 	long size;
 
 	f = fopen(name, "rb");
-	if(!f) sys_error("couldn't load game \'%s\'", name);
+	if (!f) {
+		sys_error("couldn't load game \'%s\'", name);
+		return;
+	}
 
 	fseek(f, 0, SEEK_END);
 	size = ftell(f);
@@ -37,7 +40,10 @@ void load_game(char *name)
 
 	memset(&cart,0,sizeof(cart));
 	cart.data = (uint8_t *)malloc(size);
-	if(!cart.data) sys_error("not enough memory for game!");
+	if (!cart.data) {
+		fclose(f);
+		sys_error("not enough memory for game!");
+	}
 
 	fread(cart.data, 1, size, f);
 	fclose(f);
@@ -78,7 +84,7 @@ void show_regs()
 	p += sprintf(&buf[p], "SCX=%.2X\t\tWX=%.2X\t\tOBP1=%.2X\n", HRAM(0xff43), HRAM(0xff4b), HRAM(0xff49));
 	p += sprintf(&buf[p], "SCY=%.2X\t\tWY=%.2X\n", HRAM(0xff42), HRAM(0xff4a));
 
-	MessageBox(NULL, buf, "GB Z80 and hardware register map", MB_OK | MB_TOPMOST | MB_ICONINFORMATION);
+	MessageBox(NULL, buf, "GB SM83 and hardware register map", MB_OK | MB_TOPMOST | MB_ICONINFORMATION);
 }
 
 /* load battery-backed/onboard RAM */

@@ -65,14 +65,13 @@ extern unsigned HALT, IME;
 
 #define BFLAGS (uint8_t)0xAC
 #define BFLAGSh (uint16_t)0xAC00
-// eto maska dlya "skvoznyh" flagov) mozhet i ne nado ee uzat', tem ne menee
+// this is a mask for "pass-through" flags, maybe you don't need to use it, nevertheless
 
 //#define FETCH() RD(R_PC++) disabled because of incompatibility
 
 /* CPU interface */
-void gbz80_init();
-//int  gbz80_execute();
-void gbz80_execute_until(unsigned long clk_nextevent); // Exact timing is not guarantied
-void check4int(void); // Call interrupt if IE,request flags are set and not masked.
+void sm83_init();
+void sm83_execute_until(unsigned long clk_nextevent); // Exact timing is not guarantied
+void sm83_check4int(void); // Call interrupt if IE,request flags are set and not masked.
 
 extern unsigned debug_canwrite,debug_written[2];

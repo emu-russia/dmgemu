@@ -6,7 +6,7 @@ void gb_init()
 {
 	// log_init("gbemu.log");
 	mem_init();
-	gbz80_init();
+	sm83_init();
 	pad_init();
 	ppu_init();
 	apu_init(44100);
@@ -38,7 +38,7 @@ void check4LCDint(unsigned mode) { // Also called from mem.c!!
 	//unsigned lcd_int_on_new=; // LYC is not processed here
 	if(R_STAT&stat2LCDflg[mode]/* !lcd_int_on && */) {// check if interrupt is requested already
 		R_IF|=INT_LCDSTAT;
-		check4int(); // do int if possible
+		sm83_check4int(); // do int if possible
 	}
 	//lcd_int_on = lcd_int_on_new;
 }
@@ -49,7 +49,7 @@ void check4LYC(void) {  // Also called from mem.c!!
 		if(R_STAT < stnew)
 			if(stnew&0x40) {// check if interrupt allowed
 				R_IF|=INT_LCDSTAT;
-				check4int(); // do int if possible
+				sm83_check4int(); // do int if possible
 			}
 	}
 	R_STAT=stnew;
@@ -74,12 +74,12 @@ void gb_reload_tima(unsigned data) { // will only contain byte value
 static void execute(unsigned long n) {
 	gb_eventclk+=n; // timerclk = MAXULONG means that timer interrupt is off
 	/*while(gb_eventclk>gb_timerclk) {
-		gbz80_execute_until(gb_timerclk);
+		sm83_execute_until(gb_timerclk);
 		gb_reload_tima(R_TMA);
 		R_IF|=INT_TIMER;	// request timer interrupt
-		check4int();
+		sm83_check4int();
 	}*/
-	gbz80_execute_until(gb_eventclk);
+	sm83_execute_until(gb_eventclk);
 }
 
 // **********************************************************************
@@ -105,7 +105,7 @@ void start()
 			/* LCD during H-Blank */
 			//STAT_MODE(0);
 			//gb_eventclk+=204;
-			//gbz80_execute_until(gb_eventclk);
+			//sm83_execute_until(gb_eventclk);
 
 			STAT_MODE(2);
 			ppu_enumsprites();
@@ -125,7 +125,7 @@ void start()
 		/* LCD during V-Blank (10 "empty" lines) */
 		//if(R_STAT & 0x10) // questionable
 		R_IF|=INT_VBLANK; // Queue V-blank int
-		check4int();
+		sm83_check4int();
 		STAT_MODE(1);
 		ppu_vsync();
 		for(i=10;i!=0;i--) {

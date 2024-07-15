@@ -36,9 +36,7 @@ unsigned benchmark_sound, benchmark_gfx;
 static HDC main_hdc, hdcc;
 static HBITMAP DIB_section;
 static HGDIOBJ old_obj;
-//static RGBQUAD *pbuf;
-
-RGBQUAD* pbuf;
+static RGBQUAD *pbuf;
 
 /* milk to cofee */
 RGBQUAD dib_pal[] = {
@@ -90,8 +88,8 @@ void win32_win_init(int width, int height)
 {
 	HINSTANCE hInstance = GetModuleHandle(NULL);
 	char title[128];
-	WNDCLASS wc;
-	RECT rect;
+	WNDCLASS wc{};
+	RECT rect{};
 	int w, h;
 
 	sprintf(title, "GameBoy - %s", romhdr->title);
@@ -127,8 +125,10 @@ void win32_win_init(int width, int height)
 		NULL, NULL,
 		hInstance, NULL);
 
-	if (!main_hwnd)
+	if (!main_hwnd) {
 		sys_error("couldn't create main window.");
+		return;
+	}
 
 	ShowWindow(main_hwnd, SW_NORMAL);
 	UpdateWindow(main_hwnd);
@@ -185,32 +185,37 @@ void WIN_Center(HWND hwnd)
 void win32_dib_init(int width, int height)
 {
 	HDC hdc;
-	BITMAPINFO* bmi;
+	BITMAPINFO bmi{};
 	void* DIB_base;
 
-	bmi = (BITMAPINFO*)calloc(sizeof(BITMAPINFO) + 16 * 4, 1);
 	main_hdc = hdc = GetDC(main_hwnd);
 
-	//memset(&(bmi->bmiHeader), 0, sizeof(BITMAPINFOHEADER));
+	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	dib_width = bmi.bmiHeader.biWidth = width;
+	dib_height = bmi.bmiHeader.biHeight = -height;
+	bmi.bmiHeader.biPlanes = 1;
+	bmi.bmiHeader.biBitCount = 32;
+	bmi.bmiHeader.biCompression = BI_RGB;
 
-	bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	dib_width = bmi->bmiHeader.biWidth = width;
-	dib_height = bmi->bmiHeader.biHeight = -height;
-	bmi->bmiHeader.biPlanes = 1;
-	bmi->bmiHeader.biBitCount = 32;
-	bmi->bmiHeader.biCompression = BI_RGB;
-	//bmi->bmiHeader.
-
-	DIB_section = CreateDIBSection(hdc, bmi, DIB_RGB_COLORS, &DIB_base, NULL, 0);
+	DIB_section = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, &DIB_base, NULL, 0);
+	if (!DIB_section) {
+		sys_error("CreateDIBSection() failed!");
+		return;
+	}
 	pbuf = (RGBQUAD*)DIB_base;
 
 	hdcc = CreateCompatibleDC(hdc);
-	if (!hdcc)
+	if (!hdcc) {
+		DeleteObject(DIB_section);
 		sys_error("CreateCompatibleDC() failed!");
+		return;
+	}
 
-	if (!(old_obj = SelectObject(hdcc, DIB_section)))
+	if (!(old_obj = SelectObject(hdcc, DIB_section))) {
+		DeleteDC(hdcc);
+		DeleteObject(DIB_section);
 		sys_error("SelectObject() failed!");
-	free(bmi);
+	}
 }
 
 void win32_dib_shutdown()

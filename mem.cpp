@@ -382,11 +382,11 @@ void mem_w8_IO(unsigned addr, uint8_t data) {
 		return;
 		case 0x0F : // R_IF  (interrupt request)
 			R_IF = data;
-			check4int(); 
+			sm83_check4int(); 
 		return;
 		case 0xFF : // R_IE  (interrupt mask)
 			R_IE = data;
-			check4int();
+			sm83_check4int();
 		return;
 		/*case 0x10: case 0x11: case 0x12: case 0x13:
 		case 0x14: case 0x15: case 0x16: case 0x17:
