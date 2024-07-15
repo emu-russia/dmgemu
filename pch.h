@@ -9,9 +9,6 @@
 #include <windows.h>
 #include <direct.h>
 
-/* platform dependent function marker */
-#define PLAT
-
 #define MAXULONG (unsigned long)(-1)
 
 /* Interrupt flags*/
@@ -29,6 +26,7 @@
 #include "mem.h"
 #include "sm83.h"
 #include "ppu.h"
+#include "lcd.h"
 #include "apu.h"
 #include "sound.h"
 #include "pad.h"

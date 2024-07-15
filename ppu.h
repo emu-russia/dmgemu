@@ -1,10 +1,10 @@
 #pragma once
 
-void lcd_init();
-void lcd_shutdown();
-void lcd_enumsprites();
-void lcd_refreshline();
-void lcd_vsync();
+void ppu_init();
+void ppu_shutdown();
+void ppu_enumsprites();
+void ppu_refreshline();
+void ppu_vsync();
 
 
 
@@ -15,5 +15,5 @@ extern unsigned mainpal[64];
 #define OBP0 (mainpal+4)
 #define OBP1 (mainpal+8)
 
-PLAT extern unsigned benchmark_sound,benchmark_gfx;
+extern unsigned benchmark_sound,benchmark_gfx;
 extern uint8_t tilecache[512];

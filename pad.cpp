@@ -10,17 +10,17 @@
 #define VK_RIGHT	0x27
 #define VK_DOWN     0x28	
 
-PLAT void pad_init()
+void pad_init()
 {
 }
 
-PLAT void pad_shutdown()
+void pad_shutdown()
 {
 }
 
 // **********************************************************************
 
-PLAT uint8_t pad_hi()
+uint8_t pad_hi()
 {
 	uint8_t pad = 0;
 
@@ -39,7 +39,7 @@ PLAT uint8_t pad_hi()
 }
 
 
-PLAT uint8_t pad_lo()
+uint8_t pad_lo()
 {
 	uint8_t pad = 0;
 

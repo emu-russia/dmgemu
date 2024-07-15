@@ -23,5 +23,3 @@ extern PCM pcm;
 int InitSound(unsigned long freq);
 void FreeSound(void);
 int pcm_submit(void);
-void CALLBACK BufferFinished(HWAVEOUT hwo, UINT uMsg,
-	DWORD dwInstance, DWORD dwParam1, DWORD dwParam2);

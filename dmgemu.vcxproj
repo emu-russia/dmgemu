@@ -169,6 +169,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="gb.cpp" />
+    <ClCompile Include="lcd.cpp" />
     <ClCompile Include="sm83.cpp" />
     <ClCompile Include="introm.cpp" />
     <ClCompile Include="ppu.cpp" />
@@ -189,6 +190,7 @@
   <ItemGroup>
     <ClInclude Include="gb.h" />
     <ClInclude Include="introm.h" />
+    <ClInclude Include="lcd.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="sm83.h" />
     <ClInclude Include="ppu.h" />

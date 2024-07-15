@@ -17,13 +17,13 @@ void sys_error(char *fmt, ...)
 	exit(1);
 }
 
-PLAT void rand_init()
+void rand_init()
 {
 	srand(GetTickCount() & 0xffff);
 }
 
 /* load game from file */
-PLAT void load_game(char *name)
+void load_game(char *name)
 {
 	FILE *f;
 	long size;
@@ -44,7 +44,7 @@ PLAT void load_game(char *name)
 }
 
 /* use only for DEBUG */
-PLAT void show_regs()
+void show_regs()
 {
 	char buf[0x1000];
 	int i, p = 0;
@@ -82,7 +82,7 @@ PLAT void show_regs()
 }
 
 /* load battery-backed/onboard RAM */
-PLAT void load_SRAM(uint8_t* ram_ptr, long size)
+void load_SRAM(uint8_t* ram_ptr, long size)
 {
 	FILE *f;
 	long i;
@@ -103,7 +103,7 @@ PLAT void load_SRAM(uint8_t* ram_ptr, long size)
 }
 
 /* save battery-backed/onboard RAM */
-PLAT void save_SRAM(uint8_t* ram_ptr, long size)
+void save_SRAM(uint8_t* ram_ptr, long size)
 {
 	FILE *f;
 	char name[128];
@@ -123,18 +123,18 @@ PLAT void save_SRAM(uint8_t* ram_ptr, long size)
 
 static FILE *__log__ = NULL;
 
-PLAT void log_init(char *file)
+void log_init(char *file)
 {
 	__log__ = fopen(file, "w");
 	if(!__log__) return;
 }
 
-PLAT void log_shutdown()
+void log_shutdown()
 {
 	if(__log__) fclose(__log__);
 }
 
-PLAT void __log(char *fmt, ...)
+void __log(char *fmt, ...)
 {
 	va_list	arg;
 	char buf[0x1000];
