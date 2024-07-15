@@ -67,7 +67,6 @@ void AllocWaveBuffer(struct WBuffer* w) {
 		FreeSound();
 		return;
 	}
-	//memset (w->lpData, 0, gSndBufSize); 
 	__log("\tok\n");
 
 	/*
@@ -95,7 +94,6 @@ void AllocWaveBuffer(struct WBuffer* w) {
 		FreeSound();
 		return;
 	}
-	//memset (w->lpWaveHdr, 0, sizeof(WAVEHDR));
 	__log("\tok\n");
 }
 
@@ -235,7 +233,8 @@ int pcm_submit(void)
 
 		tmp = pcm.pos - pcm.len;
 		if (tmp < 0) {
-			memset(pcm.buf + pcm.pos, pcm.buf[pcm.pos - 2], -tmp);
+			// To prevent the sound from clicking at the first frames you need to fill the buffer with the value 0x7f.
+			memset(pcm.buf + pcm.pos, 0x7f, -tmp);
 			tmp = 0;
 		}
 		memcpy(wavebuffer[wb_current].lpData, pcm.buf, pcm.len);

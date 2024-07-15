@@ -62,11 +62,14 @@ void apu_init(unsigned long freq)
 	InitSound(freq);
 	makenoise(noise15,15);
 	makenoise(noise7,7);
-	
-	pcm.buf = (uint8_t *)malloc(WAV_BUFFER_SIZE*16*(pcm.stereo+1));
+
+	//pcm.dump = fopen("pcm.bin", "wb");
+
+	pcm.size = WAV_BUFFER_SIZE * 16 * (pcm.stereo + 1);
+	pcm.buf = (uint8_t *)malloc(pcm.size);
+	memset(pcm.buf, 0, pcm.size);
 	pcm_submit();
 
-//    pcm.dump = fopen("pcm.bin", "wb");
 	apu_clk_inner[1]=0;
 	apu_clk_inner[0] = gb_clk;
 	apu_reset();
@@ -77,13 +80,11 @@ void apu_shutdown()
 	apu_reset();
 	if (pcm.dump) {
 		fclose(pcm.dump);
-		pcm.dump = nullptr;
 	}
 	pcm.pos = 0;
 	//FreeSound();   -- TODO: crashes
 	if (pcm.buf) {
 		free(pcm.buf);
-		pcm.buf = nullptr;
 	}
 	memset(&pcm, 0, sizeof(pcm));
 }

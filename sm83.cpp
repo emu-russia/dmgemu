@@ -2,14 +2,12 @@
 // The DMG SoC uses a custom SHARP SM83 core, which mostly uses the Z80 instruction set, but a completely proprietary implementation + additional opcodes and HLT/STOP modes.
 #include "pch.h"
 
+// TODO: This SM83 core implementation contains E}|{ experiments and needs to be revised because it fails the blargg tests (cpu_instrs.gb)
+
 /* SM83 Context */
 union Z80reg r_af, r_bc, r_de, r_hl;
 union Z80reg r_sp, r_pc;
 unsigned HALT, IME;
-
-/* opcode tables */
-static void (*opZ80[256])();
-static void (*cbZ80[256])();
 
 #define OP(n) break; case 0x##n##:
 #define CB(n) break; case 0x##n##:
@@ -235,15 +233,6 @@ static int cb_clk_t[256] = {
 };
 
 
-/* **********************************************************************
-	opcodes
-********/
-
-//OP(C9);
-//OP(CD);
-
-
-
 /*
 *************************************************************************
 	interpreter API
@@ -354,14 +343,13 @@ OP(1D) { DEC(R_E); }					// DEC E
 OP(1E) { R_E = FETCH(); }				// LD E,n
 OP(1F) { RRA(R_A); }					// RRA
 OP(20) { JRN(ZF)	}					//JRNZ PC+n
-OP(21) { R_HL = FETCH16();}// LD HL,nn
-OP(22) { WR(R_HL, R_A); R_HL++; }				// [GB] LD (HL++),A
+OP(21) { R_HL = FETCH16();}				// LD HL,nn
+OP(22) { WR(R_HL, R_A); R_HL++; }			// [GB] LD (HL++),A
 OP(23) { R_HL++; }						// INC HL
 OP(24) { INC(R_H); }					// INC H
 OP(25) { DEC(R_H); }					// DEC H
 OP(26) { R_H = FETCH(); }				// LD H,n
-OP(27) {
-	DAA(R_A); }							// DAA
+OP(27) { DAA(R_A); }						// DAA
 OP(28) { JR(ZF)		}					//JRZ PC+n
 OP(29) { ADDHL(R_HL); }					// ADD HL,HL
 OP(2A) { R_A = RD(R_HL);R_HL++; }			// [GB] LD A,(HL++)
@@ -536,7 +524,6 @@ OP(CA) { if(R_F & ZF) R_PC = FETCH16(); else {R_PC += 2; z80_clk--;} } // JPZ nn
 OP(CB) ;
 	opcode=FETCH();
 	z80_clk = cb_clk_t[opcode]; // TODO:move +1 to table
-	//cbZ80[op]();
 	switch(opcode) {
 
 case 00: { RLC(R_B); }		// RLC B
@@ -548,13 +535,13 @@ CB(05) { RLC(R_L); }		// RLC L
 CB(06) { tmp8 = RD(R_HL);RLC(tmp8);WR(R_HL, tmp8); }	// RLC (HL)
 CB(07) { RLC(R_A); }		// RLC A
 CB(08) { RRC(R_B); }		// RRC B
-CB(09) { RRC(R_C); }		// RLC C
-CB(0A) { RRC(R_D); }		// RLC D
-CB(0B) { RRC(R_E); }		// RLC E
-CB(0C) { RRC(R_H); }		// RLC H
-CB(0D) { RRC(R_L); }		// RLC L
+CB(09) { RRC(R_C); }		// RRC C
+CB(0A) { RRC(R_D); }		// RRC D
+CB(0B) { RRC(R_E); }		// RRC E
+CB(0C) { RRC(R_H); }		// RRC H
+CB(0D) { RRC(R_L); }		// RRC L
 CB(0E) { tmp8 = RD(R_HL);RRC(tmp8);WR(R_HL, tmp8); }	// RRC (HL)
-CB(0F) { RRC(R_A); }		// RLC A
+CB(0F) { RRC(R_A); }		// RRC A
 CB(10) { RL(R_B); }			// RL B
 CB(11) { RL(R_C); }			// RL C
 CB(12) { RL(R_D); }			// RL D

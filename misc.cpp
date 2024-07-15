@@ -43,6 +43,7 @@ void load_game(char *name)
 	if (!cart.data) {
 		fclose(f);
 		sys_error("not enough memory for game!");
+		return;
 	}
 
 	fread(cart.data, 1, size, f);
@@ -52,7 +53,7 @@ void load_game(char *name)
 /* use only for DEBUG */
 void show_regs()
 {
-	char buf[0x1000];
+	char buf[0x1000]{};
 	int i, p = 0;
 
 	p += sprintf(&buf[p], "AF=%.4X\t\tBC=%.4X\t\tDE=%.4X\nHL=%.4X\n", R_AF, R_BC, R_DE, R_HL);
@@ -137,15 +138,18 @@ void log_init(char *file)
 
 void log_shutdown()
 {
-	if(__log__) fclose(__log__);
+	if (__log__) {
+		fclose(__log__);
+		__log__ = nullptr;
+	}
 }
 
 void __log(char *fmt, ...)
 {
 	va_list	arg;
-	char buf[0x1000];
+	char buf[0x1000]{};
 
-	if(__log__ != NULL)
+	if(__log__)
 	{
 		va_start(arg, fmt);
 		vsprintf(buf, fmt, arg);
