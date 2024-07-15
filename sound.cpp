@@ -1,8 +1,6 @@
 // SO (sound output) terminal emulation
 #include "pch.h"
 
-// TODO: Figure out why the sound clicks when you start the emulator.
-
 static HWAVEOUT hWaveOut;
 
 static DWORD gSndBufSize;
@@ -235,7 +233,8 @@ int pcm_submit(void)
 
 		tmp = pcm.pos - pcm.len;
 		if (tmp < 0) {
-			memset(pcm.buf + pcm.pos, pcm.buf[pcm.pos - 2], -tmp);
+			// To prevent the sound from clicking at the first frames you need to fill the buffer with the value 0x7f.
+			memset(pcm.buf + pcm.pos, 0x7f, -tmp);
 			tmp = 0;
 		}
 		memcpy(wavebuffer[wb_current].lpData, pcm.buf, pcm.len);
