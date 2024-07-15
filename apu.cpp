@@ -20,7 +20,7 @@ typedef struct
 	unsigned outfreq,ratelo,ratehi,z0;
 	sndchan ch[4];
 	uint8_t wave[16];
-} so;
+} apu;
 
 const static uint8_t dmgwave[16] =
 {
@@ -50,7 +50,7 @@ const static int divtab[8] =
 	14
 };
 
-so snd;
+apu snd;
 
 static uint8_t noise7[16];
 static uint8_t noise15[4096];
@@ -91,7 +91,7 @@ void apu_shutdown()
 // **********************************************************************
 
 /*
-Questionable aspects of SO terminal emulation:
+Questionable aspects of APU emulation:
 
 NR51 contains updated "sound enable" flags
 Frequency registers can update if sweep is operating
@@ -333,103 +333,102 @@ void apu_write(uint8_t r, uint8_t b)
 	apu_mix();
 	switch (r)
 	{
-	case RI_NR10:
-		R_NR10 = b;
-		S1.swfreq = 2047&*(unsigned short*)&R_NR13;
-		S1.swcnt = 0; // TODO? Is it true?
-		break;
-	case RI_NR11:
-		R_NR11 = b;
-		S1.cnt = 64-(b&63);
-		break;
-	case RI_NR12:
-		R_NR12 = b;
-		S1.envol = R_NR12 >> 4;
-		if((b&0xF8) == 0) apu_1off();  // Forced OFF mode(as stated in patent docs) if 0 and down
-		//S1.endir = (R_NR12>>3) & 1;
-		//S1.endir |= S1.endir - 1;
-		break;
-	case RI_NR13:
-		R_NR13 = b;
-		s1_freq();
-		break;
-	case RI_NR14:
-		R_NR14 = b;
-		s1_freq();
-		if (b & 128) s1_init();
-		break;
-	case RI_NR21:
-		R_NR21 = b;
-		S2.cnt = 64-(b&63);
-		break;
-	case RI_NR22:
-		R_NR22 = b;
-		if((b&0xF8) == 0) apu_2off();  // Forced OFF mode(as stated in patent docs) if 0 and down
-		S2.envol = R_NR22 >> 4;
-		//S2.endir = (R_NR22>>3) & 1;
-		//S2.endir |= S2.endir - 1;
-		break;
-	case RI_NR23:
-		R_NR23 = b;
-		s2_freq();
-		break;
-	case RI_NR24:
-		R_NR24 = b;
-		s2_freq();
-		if (b & 128) s2_init();
-		break;
-	case RI_NR30:
-		R_NR30 = b;
-		if (!(b & 128)) apu_3off();
-		break;
-	case RI_NR31:
-		R_NR31 = b;
-		S3.cnt = 256-b;
-		break;
-	case RI_NR32:
-		R_NR32 = b;
-		
-		break;
-	case RI_NR33:
-		R_NR33 = b;
-		s3_freq();
-		break;
-	case RI_NR34:
-		R_NR34 = b;
-		s3_freq();
-		if (b & 128) s3_init();
-		break;
-	case RI_NR41:
-		R_NR41 = b;
-		S4.cnt = 64-(b&63);
-		break;
-	case RI_NR42:
-		R_NR42 = b;
-		S4.envol = R_NR42 >> 4;
-		if((b&0xF8) == 0) apu_4off();  // Forced OFF mode(as stated in patent docs) if 0 and down
-		break;
-	case RI_NR43:
-		R_NR43 = b;
-		s4_freq();
-		break;
-	case RI_NR44:
-		R_NR44 = b;
-		s4_freq();
-		if (b & 128) s4_init();
-		break;
-	case RI_NR50:
-		R_NR50 = b;
-		break;
-	case RI_NR51:
-		R_NR51 = b;
-		break;
-	case RI_NR52:
-		R_NR52 = b;
-		if (!(R_NR52 & 128))
-			apu_off();
-		break;
-	default:
-		return;
+		case RI_NR10:
+			R_NR10 = b;
+			S1.swfreq = 2047&*(unsigned short*)&R_NR13;
+			S1.swcnt = 0; // TODO? Is it true?
+			break;
+		case RI_NR11:
+			R_NR11 = b;
+			S1.cnt = 64-(b&63);
+			break;
+		case RI_NR12:
+			R_NR12 = b;
+			S1.envol = R_NR12 >> 4;
+			if((b&0xF8) == 0) apu_1off();  // Forced OFF mode(as stated in patent docs) if 0 and down
+			//S1.endir = (R_NR12>>3) & 1;
+			//S1.endir |= S1.endir - 1;
+			break;
+		case RI_NR13:
+			R_NR13 = b;
+			s1_freq();
+			break;
+		case RI_NR14:
+			R_NR14 = b;
+			s1_freq();
+			if (b & 128) s1_init();
+			break;
+		case RI_NR21:
+			R_NR21 = b;
+			S2.cnt = 64-(b&63);
+			break;
+		case RI_NR22:
+			R_NR22 = b;
+			if((b&0xF8) == 0) apu_2off();  // Forced OFF mode(as stated in patent docs) if 0 and down
+			S2.envol = R_NR22 >> 4;
+			//S2.endir = (R_NR22>>3) & 1;
+			//S2.endir |= S2.endir - 1;
+			break;
+		case RI_NR23:
+			R_NR23 = b;
+			s2_freq();
+			break;
+		case RI_NR24:
+			R_NR24 = b;
+			s2_freq();
+			if (b & 128) s2_init();
+			break;
+		case RI_NR30:
+			R_NR30 = b;
+			if (!(b & 128)) apu_3off();
+			break;
+		case RI_NR31:
+			R_NR31 = b;
+			S3.cnt = 256-b;
+			break;
+		case RI_NR32:
+			R_NR32 = b;
+			break;
+		case RI_NR33:
+			R_NR33 = b;
+			s3_freq();
+			break;
+		case RI_NR34:
+			R_NR34 = b;
+			s3_freq();
+			if (b & 128) s3_init();
+			break;
+		case RI_NR41:
+			R_NR41 = b;
+			S4.cnt = 64-(b&63);
+			break;
+		case RI_NR42:
+			R_NR42 = b;
+			S4.envol = R_NR42 >> 4;
+			if((b&0xF8) == 0) apu_4off();  // Forced OFF mode(as stated in patent docs) if 0 and down
+			break;
+		case RI_NR43:
+			R_NR43 = b;
+			s4_freq();
+			break;
+		case RI_NR44:
+			R_NR44 = b;
+			s4_freq();
+			if (b & 128) s4_init();
+			break;
+		case RI_NR50:
+			R_NR50 = b;
+			break;
+		case RI_NR51:
+			R_NR51 = b;
+			break;
+		case RI_NR52:
+			R_NR52 = b;
+			if (!(R_NR52 & 128))
+				apu_off();
+			break;
+		default:
+			return;
 	}
 }
 

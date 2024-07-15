@@ -1,4 +1,5 @@
-﻿// SM83 interpreter
+﻿// SM83 interpreter.
+// The DMG SoC uses a custom SHARP SM83 core, which mostly uses the Z80 instruction set, but a completely proprietary implementation + additional opcodes and HLT/STOP modes.
 #include "pch.h"
 
 #define USEBFLAGS
@@ -33,7 +34,7 @@ static void Undefined(void)
 {
 	R_PC--;
 	show_regs ();
-	sys_error("Undefined GB Z80 opcode %02X at PC = %.4X",(unsigned)RD(R_PC), (unsigned)(R_PC));
+	sys_error("Undefined SM83 opcode %02X at PC = %.4X",(unsigned)RD(R_PC), (unsigned)(R_PC));
 }
 
 static uint8_t z_b_t[256];
@@ -281,7 +282,7 @@ static int cb_clk_t[256] = {
 *************************************************************************
 */
 
-void check4int(void) { // Check for posibility of interrupt, do it if possible
+void sm83_check4int(void) { // Check for posibility of interrupt, do it if possible
 	unsigned imask,iflags,intaddr;
 	if(iflags=(IME & R_IE & R_IF)) // if interrupts enabled and there are some active interrupts in queue
 	{
@@ -340,7 +341,7 @@ borderline typically represent CPU-independent events, such as:
 1: LCD mode changes(both LCD interrupts included)
 2: timer based interrupts
 */
-void gbz80_execute_until(unsigned long clk_nextevent)
+void sm83_execute_until(unsigned long clk_nextevent)
 {
 	/* temporaries for calculations */
 uint8_t tmp8;
@@ -847,7 +848,7 @@ OP(D6) { tmp8 = FETCH(); SUB(tmp8); }	// SUB A,n
 OP(D7) { RST(0x10); }					// RST 10h
 OP(D8) { if(R_F & CF) goto opC9; else z80_clk -= 3; } // RETC
 OP(D9) { POP(r_pc); IME = INT_ALL;
-check4int();
+sm83_check4int();
 }			// [GB]	IRET
 OP(DA) { if(R_F & CF) R_PC = FETCH16(); else {R_PC += 2; z80_clk--;} } // JPC nn
 OP(DB) {Undefined();}			// [GB] not implemented
@@ -885,7 +886,7 @@ OP(F9) { R_SP = R_HL; }					// LD SP,HL
 OP(FA) { 
 	tmp32 = FETCH16();R_A = RD(tmp32); }// [GB] LD A,(nn)
 OP(FB) { IME = INT_ALL;
-check4int();
+sm83_check4int();
 }						// EI   (=STI)
 OP(FC) {Undefined();}			// [GB] NOT implemented
 OP(FD) {Undefined();}			// [GB] NOT implemented
@@ -916,7 +917,7 @@ static void filltables(void) {
 		dec_t[i] = (i&0xF)==0xF?  (p|HF)  : p;
 	}
 }
-void gbz80_init()
+void sm83_init()
 {
 	filltables();  // This makes code more readable, editable & compressable :)
 	R_PC = 0;

@@ -99,7 +99,7 @@ extern struct Cartridge {
 	unsigned ram_nbanks;   // Size of RAM in banks (mapper dependent)
 	unsigned rom_nmask;	   // Mask for ROM bank selection
 	unsigned ram_nmask;  // Mask for RAM bank selection
-	unsigned ram_end;	   // End address for usable RAM area in Z80 address space
+	unsigned ram_end;	   // End address for usable RAM area in CPU address space
 	unsigned ram_amask;	   // Mask for allowed RAM bank space 
 
 	struct MemBank rom[4]; // selected ROM bank(s)

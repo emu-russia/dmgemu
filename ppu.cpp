@@ -1,14 +1,7 @@
-/* GameBoy LCD emulation (win32) */
+// GameBoy PPU emulation
 #include "pch.h"
 
 unsigned lcd_WYline;
-
-
-/*
-*************************************************************************
-	LCD interface
-*************************************************************************
-*/
 
 void tilecache_init(void);
 

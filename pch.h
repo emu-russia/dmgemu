@@ -11,16 +11,6 @@
 
 #define MAXULONG (unsigned long)(-1)
 
-/* Interrupt flags*/
-#define INT_NONE	0
-#define INT_VBLANK	1
-#define INT_LCDSTAT 2
-#define INT_TIMER   4
-#define INT_SERIAL  8
-#define INT_PAD		0x10
-#define INT_ALL		0x1F
-
-
 /* project includes */
 #include "misc.h"
 #include "mem.h"
