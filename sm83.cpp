@@ -9,10 +9,6 @@ union Z80reg r_af, r_bc, r_de, r_hl;
 union Z80reg r_sp, r_pc;
 unsigned HALT, IME;
 
-/* opcode tables */
-static void (*opZ80[256])();
-static void (*cbZ80[256])();
-
 #define OP(n) break; case 0x##n##:
 #define CB(n) break; case 0x##n##:
 
@@ -528,7 +524,6 @@ OP(CA) { if(R_F & ZF) R_PC = FETCH16(); else {R_PC += 2; z80_clk--;} } // JPZ nn
 OP(CB) ;
 	opcode=FETCH();
 	z80_clk = cb_clk_t[opcode]; // TODO:move +1 to table
-	//cbZ80[op]();
 	switch(opcode) {
 
 case 00: { RLC(R_B); }		// RLC B
