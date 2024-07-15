@@ -1,6 +1,8 @@
 // SO (sound output) terminal emulation
 #include "pch.h"
 
+// TODO: Figure out why the sound clicks when you start the emulator.
+
 static HWAVEOUT hWaveOut;
 
 static DWORD gSndBufSize;
@@ -67,7 +69,6 @@ void AllocWaveBuffer(struct WBuffer* w) {
 		FreeSound();
 		return;
 	}
-	//memset (w->lpData, 0, gSndBufSize); 
 	__log("\tok\n");
 
 	/*
@@ -95,7 +96,6 @@ void AllocWaveBuffer(struct WBuffer* w) {
 		FreeSound();
 		return;
 	}
-	//memset (w->lpWaveHdr, 0, sizeof(WAVEHDR));
 	__log("\tok\n");
 }
 

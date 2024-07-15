@@ -7,6 +7,7 @@ typedef struct
 	int hz, len;
 	int stereo;
 	uint8_t* buf;
+	int size;			// in bytes
 	int pos;
 	FILE* dump;
 } PCM;
