@@ -2,25 +2,10 @@
 // The DMG SoC uses a custom SHARP SM83 core, which mostly uses the Z80 instruction set, but a completely proprietary implementation + additional opcodes and HLT/STOP modes.
 #include "pch.h"
 
-#define USEBFLAGS
-
-// This macros serves for switching Z80 undocumented "flags" support off
-#ifdef USEBFLAGS
-#define SETBF(r) (r&BFLAGS)
-#define ADDBF(r) R_F|=(uint8_t)(r&BFLAGS)
-#define _SETBF(r) | (r&BFLAGS)
-#else
-#define SETBF(r)
-#define ADDBF(r)
-#define _SETBF(r)
-#endif
-
 /* SM83 Context */
 union Z80reg r_af, r_bc, r_de, r_hl;
 union Z80reg r_sp, r_pc;
 unsigned HALT, IME;
-
-//int z80_clk = 0;
 
 /* opcode tables */
 static void (*opZ80[256])();
@@ -82,29 +67,14 @@ static uint8_t swap_t[256];
 }
 
 
-//#define PUSH(n) { R_SP -= 2; WR16(R_SP, n); }
-//#define POP(n)  { n = RD16(R_SP); R_SP += 2; }
 #define PUSH(n) { R_SP--; WR(R_SP, n.h); R_SP--; WR(R_SP, n.l); }
 #define POP(n)  { n.l=RD(R_SP); R_SP++; n.h=RD(R_SP); R_SP++; }
 
 
-#if 0
-
-#define PUSHAF { R_SP -= 2;\
-tmp32=R_AF&0xFF00 | (R_F&ZF?0x80:0)|(R_F&NF?0x40:0)|(R_F&HF?0x20:0)|(R_F&CF?0x10:0);\
-WR16(R_SP, (uint16_t)tmp32); }
-#define POPAF  { tmp32 = RD16(R_SP);\
- tmp32=(tmp32&0xFF00) | (tmp32&0x80?ZF:0)|(tmp32&0x40?NF:0)|(tmp32&0x20?HF:0)|(tmp32&0x10?CF:0);\
- R_AF = (uint16_t)tmp32; R_SP += 2; }
-
-#endif
-
-// that's conversion to another R_F format, use if needed by any game
-
 
 #define PUSHAF { R_SP--; WR(R_SP, r_af.l); R_SP--; WR(R_SP, r_af.h); }
 #define POPAF  { r_af.h=RD(R_SP); R_SP++; r_af.l=RD(R_SP); R_SP++; }
-// high and low part of AF register are swapped in my DMG CPU core
+// high and low part of AF register are swapped in my DMG CPU core   -- TODO: wtf?
 
 
 // warning! ADDHL/ADDSPX code is incompatible with 16 bit target cpu
@@ -162,22 +132,20 @@ WR16(R_SP, (uint16_t)tmp32); }
 
 #define RLCA(r) { \
 	r = (uint8_t)(((unsigned)r >> 7) | ((unsigned)r << 1)); \
-	R_F = (uint8_t)((R_F&ZF) _SETBF(r) | (r & CF)); }
+	R_F = (uint8_t)((R_F&ZF) | (r & CF)); }
 
 
 #define RRCA(r) { \
 	R_F = (R_F&ZF) | (uint8_t)(r & CF);\
-	r = (uint8_t)(((unsigned)r << 7) | ((unsigned)r >> 1)); \
-	ADDBF(r); }
+	r = (uint8_t)(((unsigned)r << 7) | ((unsigned)r >> 1)); }
 #define RLA(r) { \
 	tmp32 = (unsigned)r >> 7; \
 	r = (uint8_t)((unsigned)r << 1) | (unsigned)(R_F & CF); \
-	R_F = (uint8_t)((R_F&ZF) _SETBF(r) | tmp32);}
+	R_F = (uint8_t)((R_F&ZF) | tmp32);}
 #define RRA(r) { \
 	tmp32 = (unsigned)R_F<<7; \
 	R_F = (uint8_t)((R_F&ZF) | (r & CF));\
-	r = (uint8_t)(((unsigned)r >> 1) | tmp32);\
-	ADDBF(r);}
+	r = (uint8_t)(((unsigned)r >> 1) | tmp32); }
 
 
 #define RLC(r) { \
@@ -404,7 +372,6 @@ OP(2E) { R_L = FETCH(); }				// LD L,n
 OP(2F) { R_A = ~R_A; R_F = R_F&(CF|ZF) | (R_A&BFLAGS) | (HF|NF); }// CPL
 OP(30) { JRN(CF) } //JRNC PC+n
 OP(31) { R_SP=FETCH16(); } // LD SP,nn
-//R_SP = RD16(R_PC); R_PC += 2; }// LD SP,nn
 OP(32) { WR(R_HL, R_A);R_HL--; }				// [GB] LD (HL--),A
 OP(33) { R_SP++; }						// INC SP
 OP(34) { tmp8 = RD(R_HL); INC(tmp8); WR(R_HL, tmp8); } // INC (HL)

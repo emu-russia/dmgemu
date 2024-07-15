@@ -1,18 +1,20 @@
 #pragma once
 
-#define BIGENDIAN
+//#define BIGENDIAN
 
+#pragma pack(push, 1)
 union Z80reg {
 	struct {
 #ifdef BIGENDIAN
-		uint8_t l,h;
+		uint8_t h, l;
 #else
-		uint8_t h,l;
+		uint8_t l, h;
 #endif
 	};
 	uint16_t hl;
 	unsigned align; // So 1 Z80reg record will be always equal to CPU word size
 };
+#pragma pack(pop)
 
 extern union Z80reg r_af, r_bc, r_de, r_hl;
 extern union Z80reg r_sp, r_pc;
@@ -23,6 +25,7 @@ extern unsigned HALT, IME;
 /*
  direct usage of AF register is not allowed in my CPU core,
  because i swapped A and F to speedup some calculations
+ TODO: wtf?
 */
 
 #define R_BC r_bc.hl
@@ -43,31 +46,26 @@ extern unsigned HALT, IME;
 
 /* flags */
 
-#define SF_POS 7 
+// TODO: wtf?
 #define ZF_POS 6 
-#define HF_POS 4
-#define PF_POS 2
 #define NF_POS 1
+#define HF_POS 4
 #define CF_POS 0
 
-
-//#define SF (1<<SF_POS)
 #define ZF (uint8_t)(1<<ZF_POS)
-#define HF (uint8_t)(1<<HF_POS)
-//#define PF (1<<PF_POS)
 #define NF (uint8_t)(1<<NF_POS)
+#define HF (uint8_t)(1<<HF_POS)
 #define CF (uint8_t)(1<<CF_POS)
 
 #define ZFh (uint16_t)(0x100<<ZF_POS)
-#define HFh (uint16_t)(0x100<<HF_POS)
 #define NFh (uint16_t)(0x100<<NF_POS)
+#define HFh (uint16_t)(0x100<<HF_POS)
 #define CFh (uint16_t)(0x100<<CF_POS)
 
-#define BFLAGS (uint8_t)0xAC
-#define BFLAGSh (uint16_t)0xAC00
+// TODO: wtf?
+#define BFLAGS (uint8_t)~(ZF|NF|HF|CF)
+#define BFLAGSh (((uint16_t)BFLAGS)<<8)
 // this is a mask for "pass-through" flags, maybe you don't need to use it, nevertheless
-
-//#define FETCH() RD(R_PC++) disabled because of incompatibility
 
 /* CPU interface */
 void sm83_init();
