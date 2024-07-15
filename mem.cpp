@@ -508,7 +508,7 @@ static void check_ROM_header()
 }
 
 /* only for DEBUG */
-PLAT static void dump_internal_RAM()
+static void dump_internal_RAM()
 {
 #if 0
 	FILE *f;

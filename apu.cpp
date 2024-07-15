@@ -57,7 +57,7 @@ static uint8_t noise15[4096];
 
 static void makenoise(uint8_t *to,int nbits);
 
-PLAT void apu_init(unsigned long freq)
+void apu_init(unsigned long freq)
 {
 	InitSound(freq);
 	makenoise(noise15,15);
@@ -72,7 +72,7 @@ PLAT void apu_init(unsigned long freq)
 	apu_reset();
 }
 
-PLAT void apu_shutdown()
+void apu_shutdown()
 {
 	apu_reset();
 	if (pcm.dump) {
@@ -80,7 +80,7 @@ PLAT void apu_shutdown()
 		pcm.dump = nullptr;
 	}
 	pcm.pos = 0;
-	FreeSound();
+	//FreeSound();   -- TODO: crashes
 	if (pcm.buf) {
 		free(pcm.buf);
 		pcm.buf = nullptr;

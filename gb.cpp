@@ -8,7 +8,7 @@ void gb_init()
 	mem_init();
 	gbz80_init();
 	pad_init();
-	lcd_init(); 
+	ppu_init();
 	apu_init(44100);
 	__log("init OK.");
 }
@@ -19,7 +19,7 @@ void gb_shutdown()
 	mem_shutdown();
 	pad_shutdown();
 	apu_shutdown();
-	lcd_shutdown();
+	ppu_shutdown();
 	log_shutdown();
 }
 
@@ -94,7 +94,8 @@ void start()
 	lcd_int_on=0;
 	gb_eventclk = gb_clk = gb_divbase = 0;
 	gb_timerclk = 0x7FFFFFFF;
-	 while(1) {
+
+	while(1) {
 		gb_old = gb_clk;
 		R_LY=0;
 		for(i=144;i!=0;i--) {
@@ -107,11 +108,11 @@ void start()
 			//gbz80_execute_until(gb_eventclk);
 
 			STAT_MODE(2);
-			lcd_enumsprites();
+			ppu_enumsprites();
 			execute(20);
 			/* LCD during data transfer (draw line) */
 			STAT_MODE(3); /* no interrupt here !! */
-			lcd_refreshline();
+			ppu_refreshline();
 			execute(43);
 
 			/* LCD during H-Blank */
@@ -121,12 +122,12 @@ void start()
 			R_LY++;
 		}
 		//R_LY = 143;
-		  /* LCD during V-Blank (10 "empty" lines) */
+		/* LCD during V-Blank (10 "empty" lines) */
 		//if(R_STAT & 0x10) // questionable
 		R_IF|=INT_VBLANK; // Queue V-blank int
 		check4int();
 		STAT_MODE(1);
-		lcd_vsync();
+		ppu_vsync();
 		for(i=10;i!=0;i--) {
 			check4LYC();
 			execute(114);
@@ -141,5 +142,5 @@ void start()
 			if(gb_timerclk<MAXULONG) gb_timerclk-=(3<<28);
 		}
 		apu_mix();
-	 }
+	}
 }

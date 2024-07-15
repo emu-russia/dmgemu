@@ -99,8 +99,7 @@ void AllocWaveBuffer(struct WBuffer* w) {
 	__log("\tok\n");
 }
 
-void CALLBACK BufferFinished(HWAVEOUT hwo, UINT uMsg,
-	DWORD dwInstance, DWORD dwParam1, DWORD dwParam2) {
+void CALLBACK BufferFinished(HWAVEOUT hwo, UINT uMsg, DWORD dwInstance, DWORD dwParam1, DWORD dwParam2) {
 	if (uMsg == WOM_DONE) {
 		wb_free++;
 		pcm_submit();
