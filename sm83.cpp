@@ -2,6 +2,8 @@
 // The DMG SoC uses a custom SHARP SM83 core, which mostly uses the Z80 instruction set, but a completely proprietary implementation + additional opcodes and HLT/STOP modes.
 #include "pch.h"
 
+// TODO: This SM83 core implementation contains E}|{ experiments and needs to be revised because it fails the blargg tests (cpu_instrs.gb)
+
 /* SM83 Context */
 union Z80reg r_af, r_bc, r_de, r_hl;
 union Z80reg r_sp, r_pc;
