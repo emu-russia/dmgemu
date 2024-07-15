@@ -1,6 +1,8 @@
 /* GameBoy emu control */
 #include "pch.h"
 
+int skip_introm = 0;
+
 /* run on emu start */
 void gb_init()
 {
@@ -10,6 +12,10 @@ void gb_init()
 	pad_init();
 	ppu_init();
 	apu_init(44100);
+	if (skip_introm) {
+		R_INTROM = 1;
+		R_PC = 0x100;
+	}
 	__log("init OK.");
 }
 
