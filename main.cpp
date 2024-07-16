@@ -47,7 +47,7 @@ char *Open_File_Proc()
 
 	ofn.lStructSize			= sizeof(OPENFILENAME);
 	ofn.hwndOwner			= NULL;
-	ofn.lpstrFilter			= "GameBoy ROM\0*.gb;sc*.??;sl*.??\0";
+	ofn.lpstrFilter			= "GameBoy ROM\0*.gb\0All Files\0*.*\0";
 	ofn.lpstrCustomFilter	= NULL;
 	ofn.nMaxCustFilter		= 0;
 	ofn.nFilterIndex		= 1;
@@ -99,7 +99,7 @@ void plat_init()
 }
 
 /* platform Entry-point */
-int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
 #ifdef _DEBUG
 	AllocConsole();
