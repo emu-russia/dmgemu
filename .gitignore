@@ -4,3 +4,4 @@ Debug
 Release
 *.sav
 *.vcxproj.user
+/build
