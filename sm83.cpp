@@ -310,7 +310,7 @@ while(gb_clk<clk_nextevent) {
 		opcode = FETCH();
 		z80_clk = base_clk_t[opcode];
 		switch(opcode) {
-case 00: {}    // NOP?
+case 00: {}    // NOP
 OP(01) { R_BC = FETCH16();}// LD BC,nn
 OP(02) { WR(R_BC, R_A); }               // LD (BC),A
 OP(03) { R_BC++; }                      // INC BC
@@ -574,14 +574,14 @@ CB(2C) { SRA(R_H); }		// SRA H
 CB(2D) { SRA(R_L); }		// SRA L
 CB(2E) { tmp8 = RD(R_HL);SRA(tmp8);WR(R_HL, tmp8); }	// SRA (HL)
 CB(2F) { SRA(R_A); }		// SRA A
-CB(30) { R_B = swap_t[R_B];}// R_F = z_b_t[R_B]; }  // [GB] SWAP B
-CB(31) { R_C = swap_t[R_C];}// R_F = z_b_t[R_C]; }  // [GB] SWAP C
-CB(32) { R_D = swap_t[R_D];}// R_F = z_b_t[R_D]; }  // [GB] SWAP D
-CB(33) { R_E = swap_t[R_E];}// R_F = z_b_t[R_E]; }  // [GB] SWAP E
-CB(34) { R_H = swap_t[R_H];}// R_F = z_b_t[R_H]; }  // [GB] SWAP H
-CB(35) { R_L = swap_t[R_L];}// R_F = z_b_t[R_L]; }  // [GB] SWAP L
-CB(36) { WR(R_HL,tmp8=swap_t[RD(R_HL)]);}// R_F = z_b_t[tmp8];; }  // [GB] SWAP (HL)
-CB(37) { R_A = swap_t[R_A];}// R_F = z_b_t[R_A]; }  // [GB] SWAP A
+CB(30) { R_B = swap_t[R_B];}	  // [GB] SWAP B
+CB(31) { R_C = swap_t[R_C];}	  // [GB] SWAP C
+CB(32) { R_D = swap_t[R_D];}	  // [GB] SWAP D
+CB(33) { R_E = swap_t[R_E];}	  // [GB] SWAP E
+CB(34) { R_H = swap_t[R_H];}	  // [GB] SWAP H
+CB(35) { R_L = swap_t[R_L];}	  // [GB] SWAP L
+CB(36) { WR(R_HL,tmp8=swap_t[RD(R_HL)]);}	  // [GB] SWAP (HL)
+CB(37) { R_A = swap_t[R_A];}	  // [GB] SWAP A
 CB(38) { SRL(R_B); }		// SRL B
 CB(39) { SRL(R_C); }		// SRL C
 CB(3A) { SRL(R_D); }		// SRL D
