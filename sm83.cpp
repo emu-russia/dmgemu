@@ -20,10 +20,10 @@ static void Undefined(void)
 	sys_error("Undefined SM83 opcode %02X at PC = %.4X",(unsigned)RD(R_PC), (unsigned)(R_PC));
 }
 
-static uint8_t z_b_t[256];
-static uint8_t inc_t[256];
-static uint8_t dec_t[256];
-static uint8_t swap_t[256];
+static uint8_t zr_t[256];			// Z flag value for the specified operand (essentially ZF=1 when the operand is 0)
+static uint8_t inc_t[256];			// INC instruction flags
+static uint8_t dec_t[256];			// DEC instruction flags
+static uint8_t swap_t[256];			// Preswapped values
 
 // **********************************************************************
 
@@ -61,7 +61,7 @@ static uint8_t swap_t[256];
 	tmp32=(unsigned)R_A+((unsigned)(R_F&CF)<<8);\
 	if(tmp8=(R_F&NF)) _DAS(-=) else _DAA(+=)\
 	R_A = (uint8_t)tmp32;\
-	R_F = tmp8 | z_b_t[R_A];\
+	R_F = tmp8 | zr_t[R_A];\
 }
 
 
@@ -79,7 +79,7 @@ static uint8_t swap_t[256];
 // 8 bit signed value assumed!!!
 #define ADDSPX(n)  \
 	tmp32 = (unsigned)R_SP + (signed)(signed char)n;\
-	R_F = (uint8_t)((tmp32&BFLAGSh | ((signed)(signed char)n^tmp32^R_SP)&HFh)>>8\
+	R_F = (uint8_t)((((signed)(signed char)n^tmp32^R_SP)&HFh)>>8\
 		| (tmp32>>16)&CF);
 
 #define LDHLSP(n) { ADDSPX(n);R_HL = (uint16_t)tmp32; }
@@ -88,18 +88,18 @@ static uint8_t swap_t[256];
 // 8 or 16 bit unsigned value assumed
 #define ADDHL(n) { \
 	tmp32 = (unsigned)R_HL + n; \
-	r_af.hl = (uint16_t)(r_af.hl&(ZFh|0xFF) | BFLAGSh&tmp32 |\
+	r_af.hl = (uint16_t)(r_af.hl&(ZFh|0xFF) |\
 		HFh & (tmp32^(unsigned)R_HL^n) | (tmp32>>8) & CFh);\
 	R_HL = (uint16_t)tmp32; }/*T*/
 
 #define ADD(n) { \
 	tmp32 = (unsigned)R_A + n;\
-	r_af.hl = (uint16_t)(((HF & (tmp32^(unsigned)R_A^n))|z_b_t[(uint8_t)tmp32])<<8 | tmp32/*CF*/); \
+	r_af.hl = (uint16_t)(((HF & (tmp32^(unsigned)R_A^n))|zr_t[(uint8_t)tmp32])<<8 | tmp32/*CF*/); \
 }
 
 #define ADC(n) { \
 	tmp32 = (unsigned)R_A + n + (R_F&CF);\
-	r_af.hl = (uint16_t)(((HF & (tmp32^(unsigned)R_A^n))|z_b_t[(uint8_t)tmp32])<<8 | tmp32/*CF*/); \
+	r_af.hl = (uint16_t)(((HF & (tmp32^(unsigned)R_A^n))|zr_t[(uint8_t)tmp32])<<8 | tmp32/*CF*/); \
 }
 
 
@@ -108,21 +108,21 @@ static uint8_t swap_t[256];
 // TODO:check    I did just like Faizullin did, don't know if it right
 #define CP(n) { \
 	tmp32 = (unsigned)R_A - (unsigned)n; \
-	R_F   = (uint8_t)((HF & (tmp32^R_A^n)) | -(signed)(tmp32 >> 8)) | z_b_t[(uint8_t)tmp32] | NF;\
+	R_F   = (uint8_t)((HF & (tmp32^R_A^n)) | -(signed)(tmp32 >> 8)) | zr_t[(uint8_t)tmp32] | NF;\
 }
 
 #define SBC(n) { \
 	tmp32 = (unsigned)R_A - (unsigned)n-(R_F&CF); \
-	R_F   = (uint8_t)((HF & (tmp32^R_A^n)) | -(signed)(tmp32 >> 8)) | z_b_t[(uint8_t)tmp32] | NF;\
+	R_F   = (uint8_t)((HF & (tmp32^R_A^n)) | -(signed)(tmp32 >> 8)) | zr_t[(uint8_t)tmp32] | NF;\
 	R_A = (uint8_t)tmp32;\
 }
 
 #define SUB(n) { CP(n);R_A = (uint8_t)tmp32;}
 
 
-#define AND(n) { R_A &= n; R_F = z_b_t[R_A] | HF; }
-#define OR(n) { R_A |= n;  R_F = z_b_t[R_A]; }
-#define XOR(n) { R_A ^= n; R_F = z_b_t[R_A]; }
+#define AND(n) { R_A &= n; R_F = zr_t[R_A] | HF; }
+#define OR(n) { R_A |= n;  R_F = zr_t[R_A]; }
+#define XOR(n) { R_A ^= n; R_F = zr_t[R_A]; }
 
 
 #define INC(n) { n++; R_F = (uint8_t)((R_F & CF) | inc_t[n]); }
@@ -148,40 +148,40 @@ static uint8_t swap_t[256];
 
 #define RLC(r) { \
 	r = (uint8_t)(((unsigned)r >> 7) | ((unsigned)r << 1)); \
-	R_F = z_b_t[r] | (r & CF); }
+	R_F = zr_t[r] | (r & CF); }
 #define RRC(r) { \
 	R_F = r & CF;\
 	r = (uint8_t)(((unsigned)r << 7) | ((unsigned)r >> 1)); \
-	R_F |= z_b_t[r]; }
+	R_F |= zr_t[r]; }
 #define RL(r) { \
 	tmp32 = (unsigned)r >> 7;/*pos. of CF flag*/ \
 	r = (uint8_t)((unsigned)r << 1) | (unsigned)(R_F & CF); \
-	R_F = z_b_t[r] | (uint8_t)(tmp32);}
+	R_F = zr_t[r] | (uint8_t)(tmp32);}
 #define RR(r) { \
 	tmp32 = (unsigned)R_F<<7; \
 	R_F = r & CF;\
 	r = (uint8_t)(((unsigned)r >> 1) | tmp32);\
-	R_F|=z_b_t[r];}
+	R_F|=zr_t[r];}
 
 
 #define SLA(r) { \
 	R_F = (r>>7) & CF;\
 	r <<= 1; \
-	R_F |= z_b_t[r]; }
+	R_F |= zr_t[r]; }
 
 #define SRA(r) { \
 	R_F = (r & CF);\
 	r = (uint8_t)((signed)(signed char)r>>1); \
-	R_F |= z_b_t[r]; }
+	R_F |= zr_t[r]; }
 
 
 #define SRL(r) { \
 	R_F = (r & CF);\
 	r >>= 1; \
-	R_F |= z_b_t[r]; }
+	R_F |= zr_t[r]; }
 
 
-#define BIT(n, r) { R_F = (R_F & CF) | HF| z_b_t[(1<<n) & r]; }
+#define BIT(n, r) { R_F = (R_F & CF) | HF| zr_t[(1<<n) & r]; }
 #define RES(n, r) { r &= ~(1 << n); }
 #define MRES(n, r) { WR(r, RD(r) & (~(1 << n))); }
 #define SET(n, r) { r |= (1 << n); }
@@ -197,7 +197,7 @@ static int base_clk_t[256] = {
  1, 3, 2, 2, 1, 1, 2, 1, 5, 2, 2, 2, 1, 1, 2, 1,
  1, 3, 2, 2, 1, 1, 2, 1, 3, 2, 2, 2, 1, 1, 2, 1,
  3, 3, 2, 2, 1, 1, 2, 1, 3, 2, 2, 2, 1, 1, 2, 1,
- 3, 3, 2, 2, 1, 3, 3, 3, 3, 2, 2, 2, 1, 1, 2, 1,
+ 3, 3, 2, 2, 3, 3, 3, 1, 3, 2, 2, 2, 1, 1, 2, 1,
  1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1,
  1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1,
  1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1,
@@ -310,7 +310,7 @@ while(gb_clk<clk_nextevent) {
 		opcode = FETCH();
 		z80_clk = base_clk_t[opcode];
 		switch(opcode) {
-case 00: {}    // NOP?
+case 00: {}    // NOP
 OP(01) { R_BC = FETCH16();}// LD BC,nn
 OP(02) { WR(R_BC, R_A); }               // LD (BC),A
 OP(03) { R_BC++; }                      // INC BC
@@ -357,7 +357,7 @@ OP(2B) { R_HL--; }						// DEC HL
 OP(2C) { INC(R_L); }					// INC L
 OP(2D) { DEC(R_L); }					// DEC L
 OP(2E) { R_L = FETCH(); }				// LD L,n
-OP(2F) { R_A = ~R_A; R_F = R_F&(CF|ZF) | (R_A&BFLAGS) | (HF|NF); }// CPL
+OP(2F) { R_A = ~R_A; R_F = R_F&(CF|ZF) | (HF|NF); }// CPL
 OP(30) { JRN(CF) } //JRNC PC+n
 OP(31) { R_SP=FETCH16(); } // LD SP,nn
 OP(32) { WR(R_HL, R_A);R_HL--; }				// [GB] LD (HL--),A
@@ -374,7 +374,7 @@ OP(3B) { R_SP--; }						// DEC SP
 OP(3C) { INC(R_A); }					// INC A
 OP(3D) { DEC(R_A); }					// DEC A
 OP(3E) { R_A = FETCH(); }				// LD A,n
-OP(3F) { R_F = ((R_F & (uint8_t)(BFLAGS|ZF|CF)) |
+OP(3F) { R_F = ((R_F & (uint8_t)(ZF|CF)) |
 				(R_F&(uint8_t)CF)<<(uint8_t)(HF_POS-CF_POS)) ^ (uint8_t)CF; }// CCF
 OP(40) {}								// LD B,B
 OP(41) { R_B = R_C; }					// LD B,C
@@ -574,14 +574,14 @@ CB(2C) { SRA(R_H); }		// SRA H
 CB(2D) { SRA(R_L); }		// SRA L
 CB(2E) { tmp8 = RD(R_HL);SRA(tmp8);WR(R_HL, tmp8); }	// SRA (HL)
 CB(2F) { SRA(R_A); }		// SRA A
-CB(30) { R_B = swap_t[R_B];}// R_F = z_b_t[R_B]; }  // [GB] SWAP B
-CB(31) { R_C = swap_t[R_C];}// R_F = z_b_t[R_C]; }  // [GB] SWAP C
-CB(32) { R_D = swap_t[R_D];}// R_F = z_b_t[R_D]; }  // [GB] SWAP D
-CB(33) { R_E = swap_t[R_E];}// R_F = z_b_t[R_E]; }  // [GB] SWAP E
-CB(34) { R_H = swap_t[R_H];}// R_F = z_b_t[R_H]; }  // [GB] SWAP H
-CB(35) { R_L = swap_t[R_L];}// R_F = z_b_t[R_L]; }  // [GB] SWAP L
-CB(36) { WR(R_HL,tmp8=swap_t[RD(R_HL)]);}// R_F = z_b_t[tmp8];; }  // [GB] SWAP (HL)
-CB(37) { R_A = swap_t[R_A];}// R_F = z_b_t[R_A]; }  // [GB] SWAP A
+CB(30) { R_B = swap_t[R_B];}	  // [GB] SWAP B
+CB(31) { R_C = swap_t[R_C];}	  // [GB] SWAP C
+CB(32) { R_D = swap_t[R_D];}	  // [GB] SWAP D
+CB(33) { R_E = swap_t[R_E];}	  // [GB] SWAP E
+CB(34) { R_H = swap_t[R_H];}	  // [GB] SWAP H
+CB(35) { R_L = swap_t[R_L];}	  // [GB] SWAP L
+CB(36) { WR(R_HL,tmp8=swap_t[RD(R_HL)]);}	  // [GB] SWAP (HL)
+CB(37) { R_A = swap_t[R_A];}	  // [GB] SWAP A
 CB(38) { SRL(R_B); }		// SRL B
 CB(39) { SRL(R_C); }		// SRL C
 CB(3A) { SRL(R_D); }		// SRL D
@@ -821,10 +821,10 @@ OP(E6) { tmp8=FETCH();AND(tmp8); }				// AND A,n
 OP(E7) { RST(0x20); }					// RST 20h
 OP(E8) { tmp8 = FETCH(); ADDSP(tmp8); }	// ADD SP,n 
 OP(E9) { R_PC = R_HL; }					// JP (HL)
-OP(EA) { tmp32 = FETCH16();/*RD16(R_PC);R_PC += 2*/WR(tmp32, R_A); } // [GB] LD (nn),A   TODO: unchecked. FETCH32?
-OP(EB) {Undefined();}			// [GB] NOT implemented (but should be)
+OP(EA) { tmp32 = FETCH16(); WR(tmp32, R_A); } // [GB] LD (nn),A   TODO: unchecked.
+OP(EB) {Undefined();}			// [GB] NOT implemented
 OP(EC) {Undefined();}			// [GB] NOT implemented
-OP(ED) {Undefined();}			// [GB] NOT implemented ?????????? (former prefix)
+OP(ED) {Undefined();}			// [GB] NOT implemented
 OP(EE) { tmp8=FETCH();XOR(tmp8); }				// XOR A,n
 OP(EF) { RST(0x28); }					// RST 28h
 OP(F0) { tmp32 = 0xff00 + FETCH(); R_A = RD(tmp32); }	// [GB] LD A,(FF00+n)
@@ -863,9 +863,9 @@ static void filltables(void) {
 	unsigned i,p;
 	for(i=0;i<256;i++) {
 		swap_t[i] = (uint8_t)((i<<4)|(i>>4));
-		p = i&BFLAGS;
+		p = 0;
 		if(!i) p|=ZF;
-		z_b_t[i]=p;
+		zr_t[i]=p;
 		inc_t[i] = (i&0xF)==0x0?  (p|HF)  : p;
 		p|=NF;
 		dec_t[i] = (i&0xF)==0xF?  (p|HF)  : p;

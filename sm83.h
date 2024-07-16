@@ -62,11 +62,6 @@ extern unsigned HALT, IME;
 #define HFh (uint16_t)(0x100<<HF_POS)
 #define CFh (uint16_t)(0x100<<CF_POS)
 
-// TODO: wtf?
-#define BFLAGS (uint8_t)~(ZF|NF|HF|CF)
-#define BFLAGSh (((uint16_t)BFLAGS)<<8)
-// this is a mask for "pass-through" flags, maybe you don't need to use it, nevertheless
-
 /* CPU interface */
 void sm83_init();
 void sm83_execute_until(unsigned long clk_nextevent); // Exact timing is not guarantied
