@@ -80,6 +80,7 @@ void plat_init()
 
 	rand_init();
 	TimerInit();
+	//TimerTest();
 
 	if(argc <= 1)
 	{
@@ -100,6 +101,11 @@ void plat_init()
 /* platform Entry-point */
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
+#ifdef _DEBUG
+	AllocConsole();
+	freopen("CONOUT$", "w", stdout);
+#endif
+
 	ParseCommandLine(lpCmdLine);
 	plat_init();
 
