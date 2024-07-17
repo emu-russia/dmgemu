@@ -9,7 +9,7 @@ int screen_width, screen_height;
 static uint32_t* pbuf;
 
 /* milk to cofee */
-uint32_t dib_pal[] = {
+uint32_t dmg_pal[] = {
 	0xffe78f,		// color #0 (milk)
 	0xdfb05f,		// color #1
 	0x90783f,		// color #2
@@ -22,13 +22,13 @@ SDL_Window* output_window = nullptr;
 void lcd_refresh(int line)
 {
 	int i;
-	unsigned long* p = (unsigned long*)pbuf + 160 * line;
+	uint32_t* p = (uint32_t*)pbuf + 160 * line;
 	if (lcd_effect == 1)
 		for (i = 0; i < 160; i++)
-			p[i] = (0x7F7F7F & (p[i] >> 1)) + (0x7F7F7F & (((unsigned long*)dib_pal)[mainpal[(linebuffer + 8)[i] & 0x3F]] >> 1));
+			p[i] = (0x7F7F7F & (p[i] >> 1)) + (0x7F7F7F & (((uint32_t*)dmg_pal)[mainpal[(linebuffer + 8)[i] & 0x3F]] >> 1));
 	else
 		for (i = 0; i < 160; i++)
-			p[i] = ((unsigned long*)dib_pal)[mainpal[(linebuffer + 8)[i] & 0x3F]];
+			p[i] = ((uint32_t*)dmg_pal)[mainpal[(linebuffer + 8)[i] & 0x3F]];
 }
 
 void sdl_win_init(int width, int height)

@@ -64,7 +64,5 @@ extern unsigned HALT, IME;
 
 /* CPU interface */
 void sm83_init();
-void sm83_execute_until(unsigned long clk_nextevent); // Exact timing is not guarantied
+void sm83_execute_until(uint32_t clk_nextevent); // Exact timing is not guarantied
 void sm83_check4int(void); // Call interrupt if IE,request flags are set and not masked.
-
-extern unsigned debug_canwrite,debug_written[2];

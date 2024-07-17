@@ -23,28 +23,23 @@ void Timer(void) {
 }
 
 // Get timer, no reset
-unsigned long GetTimer(void) {
+uint32_t GetTimer(void) {
 
 	newtimer = microtime();
 	return newtimer - oldtimer;
 }
 
 // Get timer and reset
-unsigned long GetTimerR(void) {
-	unsigned long t = GetTimer();
+uint32_t GetTimerR(void) {
+	uint32_t t = GetTimer();
 	oldtimer = newtimer;
 	return t;
 }
 
 void TimerTest() {
 	Timer();
-	unsigned long stamp1 = GetTimer();
-#ifdef _WIN32
-	::Sleep(1000);
-#endif
-#ifdef _LINUX
+	uint32_t stamp1 = GetTimer();
 	usleep(1000);
-#endif
-	unsigned long stamp2 = GetTimer();
+	uint32_t stamp2 = GetTimer();
 	printf("TimerTest, ticks between Sleep(1000), should be around 1'000'000: %d\n", (int)(stamp2 - stamp1));
 }

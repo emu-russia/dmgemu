@@ -19,10 +19,10 @@ void gb_reload_tima(unsigned data);
 //void check4LCDint(void);
 
 
-extern unsigned long gb_clk;
-extern unsigned long gb_timerclk; // time before next timer interrupt
-extern unsigned long gb_divbase;
-extern unsigned long gb_timbase;
+extern uint32_t gb_clk;
+extern uint32_t gb_timerclk; // time before next timer interrupt
+extern uint32_t gb_divbase;
+extern uint32_t gb_timbase;
 extern uint8_t gb_timshift;
 
 #define BENCHMARK 0

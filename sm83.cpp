@@ -298,7 +298,7 @@ borderline typically represent CPU-independent events, such as:
 1: LCD mode changes(both LCD interrupts included)
 2: timer based interrupts
 */
-void sm83_execute_until(unsigned long clk_nextevent)
+void sm83_execute_until(uint32_t clk_nextevent)
 {
 	/* temporaries for calculations */
 uint8_t tmp8;

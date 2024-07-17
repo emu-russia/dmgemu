@@ -26,7 +26,7 @@ static void SDLCALL Mixer(void* unused, Uint8* stream, int len)
 	}
 }
 
-int InitSound(unsigned long freq)
+int InitSound(int freq)
 {
 	SampleBuf_Size = WAV_BUFFER_SIZE;
 	SampleBuf = new int8_t[SampleBuf_Size * 2];

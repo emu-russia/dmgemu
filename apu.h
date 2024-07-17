@@ -24,15 +24,15 @@
 #define RI_NR51 0x25
 #define RI_NR52 0x26
 
-//extern unsigned long apu_clk;  - same as gb_clk now
-extern unsigned long apu_clk_inner[2];
-extern unsigned long apu_clk_nextchange;
+//extern uint32_t apu_clk;  - same as gb_clk now
+extern uint32_t apu_clk_inner[2];
+extern uint32_t apu_clk_nextchange;
 // ALL internal clock variables are exported (to be wrapped in gb.c)
 
 
 uint8_t apu_read(uint8_t);
 void apu_write(uint8_t, uint8_t);
 
-void apu_init(unsigned long freq);
+void apu_init(int freq);
 void apu_shutdown();
 void apu_mix();

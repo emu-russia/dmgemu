@@ -364,7 +364,7 @@ void mem_w8_IO(unsigned addr, uint8_t data) {
 			break;
 */
 		case 0x04:	// R_DIV - divider counter, reset to 0 when written
-			gb_divbase = -(signed long)(gb_clk >> 6);
+			gb_divbase = -(int32_t)(gb_clk >> 6);
 			return;
 		case 0x05:	// R_TIMA - timer accumulator write
 			gb_reload_tima(R_TIMA=data);

@@ -56,9 +56,9 @@ static uint8_t noise7[16];
 static uint8_t noise15[4096];
 
 static void makenoise(uint8_t *to,int nbits);
-static void apu_reset(unsigned long freq);
+static void apu_reset(int freq);
 
-void apu_init(unsigned long freq)
+void apu_init(int freq)
 {
 	InitSound(freq);
 	makenoise(noise15,15);
@@ -110,8 +110,8 @@ everything not noted here is updated immediately
 #define S3 (snd.ch[2])
 #define S4 (snd.ch[3])
 
-unsigned long apu_clk_inner[2];
-unsigned long apu_clk_nextchange;
+uint32_t apu_clk_inner[2];
+uint32_t apu_clk_nextchange;
 
 static void makenoise(uint8_t *to,int nbits) {
 	unsigned i,j,counter,acc,tmp;
@@ -206,7 +206,7 @@ void apu_off()
 	apu_dirty();
 }
 
-static void apu_reset(unsigned long freq)
+static void apu_reset(int freq)
 {
 	memset(&snd, 0, sizeof snd);
 	if (freq) {
@@ -433,13 +433,13 @@ TODO:
   for example: don't mix if both l&r outputs are disabled for a channel
   mono mixing can use some additional optimization.
 */
-void apu_mix_basic(unsigned long apu_clk_new) {
+void apu_mix_basic(uint32_t apu_clk_new) {
 	
 	uint8_t *s1_waveptr;
 	uint8_t *s2_waveptr;
 	int l,r,lr[4][2];
 	unsigned s;
-	unsigned long clk[2];
+	uint32_t clk[2];
 	clk[0] = apu_clk_inner[0];
 	clk[1] = apu_clk_inner[1];
 	if(clk[1]>= apu_clk_new) return;
@@ -515,7 +515,7 @@ void apu_mix(void) {
 	unsigned i,tmp,tmp2,swperiod,enperiod;
 	uint8_t *pt;
 	benchmark_sound-=GetTimer();
-	while (apu_clk_nextchange<(unsigned long)gb_clk) {
+	while (apu_clk_nextchange<(uint32_t)gb_clk) {
 		apu_mix_basic(apu_clk_nextchange);
 		// Change envelopes,counters/etc----------------
 		// Sound length check (256 Hz)
