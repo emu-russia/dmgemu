@@ -56,6 +56,7 @@ static uint8_t noise7[16];
 static uint8_t noise15[4096];
 
 static void makenoise(uint8_t *to,int nbits);
+static void apu_reset(unsigned long freq);
 
 void apu_init(unsigned long freq)
 {
@@ -65,12 +66,11 @@ void apu_init(unsigned long freq)
 
 	apu_clk_inner[1]=0;
 	apu_clk_inner[0] = gb_clk;
-	apu_reset();
+	apu_reset(freq);
 }
 
 void apu_shutdown()
 {
-	apu_reset();
 	FreeSound();
 }
 
@@ -206,16 +206,15 @@ void apu_off()
 	apu_dirty();
 }
 
-void apu_reset()
+static void apu_reset(unsigned long freq)
 {
 	memset(&snd, 0, sizeof snd);
-	if (pcm.hz) {
+	if (freq) {
 		// stupid 48 bit division :)
-		RATEHI = SO_FREQ / (OUT_FREQ=pcm.hz);  // higher part of rate
+		RATEHI = SO_FREQ / (OUT_FREQ = freq);  // higher part of rate
 		RATELO = ((SO_FREQ-RATEHI*OUT_FREQ) << 16)/OUT_FREQ; // lower 16 bits
 	}
 	
-	pcm.pos = 0;
 	apu_clk_inner[0] = 0;
 	apu_clk_inner[1] = gb_clk;
 	apu_clk_nextchange = (gb_clk&~0xFFF)+0x1000; // 256 Hz divider
@@ -498,17 +497,11 @@ void apu_mix_basic(unsigned long apu_clk_new) {
 		}
 		
 		
-		l = l*(R_NR50 & 0x07)>>2     ;		
+		l = l*(R_NR50 & 0x07)>>2     ;
 		r = r*((R_NR50 & 0x70)>>4)>>2;
+		
+		pop_sample(l, r);
 
-		if(pcm.stereo)  {
-			pcm.buf[pcm.pos]  =l+128;
-			pcm.buf[pcm.pos+1]=r+128;
-			pcm.pos+=2;
-		} else {
-			pcm.buf[pcm.pos]=128+((l+r)>>1);
-			if(pcm.pos<pcm.len*4) pcm.pos++;
-		}
 		clk[0]+=RATELO;
 		clk[1]+=RATEHI+(clk[0]>>16);
 		clk[0]&=0xFFFF;			// 48 bit counter
@@ -521,7 +514,6 @@ void apu_mix_basic(unsigned long apu_clk_new) {
 void apu_mix(void) {
 	unsigned i,tmp,tmp2,swperiod,enperiod;
 	uint8_t *pt;
-	if(!pcm.buf) return;
 	benchmark_sound-=GetTimer();
 	while (apu_clk_nextchange<(unsigned long)gb_clk) {
 		apu_mix_basic(apu_clk_nextchange);
@@ -590,10 +582,8 @@ void apu_mix(void) {
 		}
 		//----------------------------------------------
 		apu_clk_nextchange+=0x1000; // Warning, 14 lower buts must ALWAYS be 0
-		//if(wb_free > 0) pcm_submit();
 		}
 	}
 	apu_mix_basic(gb_clk);
 	benchmark_sound+=GetTimer();
-	//if(wb_free > 0) pcm_submit();
 }

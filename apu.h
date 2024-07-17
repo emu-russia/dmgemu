@@ -33,7 +33,6 @@ extern unsigned long apu_clk_nextchange;
 uint8_t apu_read(uint8_t);
 void apu_write(uint8_t, uint8_t);
 
-void apu_init(unsigned long);
+void apu_init(unsigned long freq);
 void apu_shutdown();
 void apu_mix();
-void apu_reset();
