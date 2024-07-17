@@ -25,5 +25,7 @@ extern unsigned long gb_divbase;
 extern unsigned long gb_timbase;
 extern uint8_t gb_timshift;
 
+#define BENCHMARK 0
+
 extern unsigned benchmark_sound, benchmark_gfx;
 extern int sound_enabled;

@@ -47,7 +47,10 @@ void load_game(char *name)
 		return;
 	}
 
-	fread(cart.data, 1, size, f);
+	int readed = fread(cart.data, 1, size, f);
+	if (readed != size) {
+		__log ("Did not read as many bytes as specified!");
+	}
 	fclose(f);
 }
 
@@ -110,7 +113,10 @@ void load_SRAM(uint8_t* ram_ptr, long size)
 		return;
 	}
 
-	fread(ram_ptr, 1, size, f);
+	int readed = fread(ram_ptr, 1, size, f);
+	if (readed != size) {
+		__log ("Did not read as many bytes as specified!");
+	}
 	fclose(f);
 }
 
