@@ -21,6 +21,7 @@ RGBQUAD dib_pal[] = {
 SDL_Surface* output_surface = nullptr;
 SDL_Window* output_window = nullptr;
 
+//case VK_ESCAPE: DestroyWindow(hwnd); break;
 //case VK_F12:
 //	(sound_enabled) ? apu_shutdown() : apu_init(44100);
 //	sound_enabled ^= 1;
