@@ -24,14 +24,10 @@ uint8_t pad_hi()
 {
 	uint8_t pad = 0;
 
-	if(GetAsyncKeyState(VK_S) & 0x80000000) pad |= 8;      
-/* START */
-	if(GetAsyncKeyState(VK_A) & 0x80000000) pad |= 4;      
-/* SELECT */
-	if(GetAsyncKeyState(VK_Z) & 0x80000000) pad |= 2;      
-/* B */
-	if(GetAsyncKeyState(VK_X) & 0x80000000) pad |= 1;      
-/* A */
+	if(GetAsyncKeyState(VK_S) & 0x80000000) pad |= 8;      /* START */
+	if(GetAsyncKeyState(VK_A) & 0x80000000) pad |= 4;      /* SELECT */
+	if(GetAsyncKeyState(VK_Z) & 0x80000000) pad |= 2;      /* B */
+	if(GetAsyncKeyState(VK_X) & 0x80000000) pad |= 1;      /* A */
 
 	if(GetAsyncKeyState(VK_RETURN) & 0x80000000) pad |= 0xf;
 
