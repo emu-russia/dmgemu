@@ -14,13 +14,6 @@ typedef struct
 
 extern PCM pcm;
 
-#define WAV_CHANNELS            2
-#define WAV_SAMPLEBITS          8
-#define WAV_BUFFER_SIZE         6144
-
-
-#define NBUFFERS 3
-
 int InitSound(unsigned long freq);
 void FreeSound(void);
 int pcm_submit(void);

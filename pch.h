@@ -8,6 +8,7 @@
 #include <string.h>
 #include <windows.h>
 #include <direct.h>
+#include "SDL.h"
 
 #define MAXULONG (unsigned long)(-1)
 

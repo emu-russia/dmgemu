@@ -41,3 +41,11 @@ unsigned long GetTimerR(void) {
 	oldtimer.QuadPart = newtimer.QuadPart;
 	return t;
 }
+
+void TimerTest() {
+	Timer();
+	unsigned long stamp1 = GetTimer();
+	::Sleep(1000);
+	unsigned long stamp2 = GetTimer();
+	printf("TimerTest, ticks between Sleep(1000): %d\n", stamp2 - stamp1);
+}

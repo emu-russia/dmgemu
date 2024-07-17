@@ -5,6 +5,12 @@ static HWAVEOUT hWaveOut;
 
 static DWORD gSndBufSize;
 
+#define WAV_CHANNELS            2
+#define WAV_SAMPLEBITS          8
+#define WAV_BUFFER_SIZE         6144
+
+#define NBUFFERS 3
+
 PCM pcm;
 
 #define THRESHOLD1 (pcm.len*2)
@@ -117,7 +123,7 @@ void PlayWaveBuffer(struct WBuffer* w)
 		if (waveOutPrepareHeader(hWaveOut, w->lpWaveHdr, sizeof(WAVEHDR)) !=
 			MMSYSERR_NOERROR) {
 			__log("waveOutPrepareHeader failed\n");
-			//FreeSound ();
+			FreeSound ();
 			return;
 		}
 		if (waveOutWrite(hWaveOut, w->lpWaveHdr, sizeof(WAVEHDR)) == MMSYSERR_NOERROR) {
@@ -190,6 +196,16 @@ int InitSound(unsigned long freq)
 	pcm.hz = freq;
 	pcm.len = gSndBufSize;//WAV_BUFFER_SIZE;
 
+	//pcm.dump = fopen("pcm.bin", "wb");
+	pcm.size = WAV_BUFFER_SIZE * 16 * (pcm.stereo + 1);
+	pcm.buf = (uint8_t*)malloc(pcm.size);
+	if (!pcm.buf) {
+		__log("There was not enough memory for the PCM buffer.");
+		return 0;
+	}
+	memset(pcm.buf, 0, pcm.size);
+	pcm_submit();
+
 	return 1;
 }
 
@@ -198,6 +214,13 @@ void FreeSound(void)
 	int i;
 	__log("Shutting down sound system\n");
 
+	if (pcm.dump) {
+		fclose(pcm.dump);
+	}
+	pcm.pos = 0;
+
+	// TODO: Crashes
+#if 0 
 	if (hWaveOut)
 	{
 		__log("...resetting waveOut\n");
@@ -208,6 +231,12 @@ void FreeSound(void)
 		__log("...closing waveOut\n");
 		waveOutClose(hWaveOut);
 	}
+#endif
+
+	if (pcm.buf) {
+		free(pcm.buf);
+	}
+	memset(&pcm, 0, sizeof(pcm));
 }
 
 /*

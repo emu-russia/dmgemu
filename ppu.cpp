@@ -2,22 +2,20 @@
 #include "pch.h"
 
 unsigned lcd_WYline;
+uint8_t linebuffer[192]; // showed from 8-th byte
 
 void tilecache_init(void);
 
 void ppu_init() 
 {
 	tilecache_init();
-
-	win32_win_init(160, 144);
-	WIN_Center(main_hwnd);
-	win32_dib_init(160, 144);
+	sdl_win_init(160, 144);
 	lcd_WYline=-1;
 }
 
 void ppu_shutdown()
 {
-	win32_dib_shutdown();
+	sdl_win_shutdown();
 }
 
 // **********************************************************************
@@ -250,9 +248,8 @@ void ppu_vsync()
 	benchmark_gfx = benchmark_sound = 0;
 	timepos=(timepos+1)&7;
 
-	win32_dib_blit();
-
-	win32_win_update();
+	sdl_win_blit();
+	sdl_win_update();
 
 	/* Frames Per Second */
 	frame++;
@@ -274,7 +271,7 @@ void ppu_vsync()
 		//	1000000/time,(bm_o*100)/time,(bm_g*100)/time,(bm_s*100)/time);
 		//else
 			sprintf(title, "GameBoy - %s [%u fps]", cart.title, 1000000/time);
-		SetWindowText(main_hwnd, title);
+		sdl_win_update_title(title);
 	}
 
 	//oldtime = GetTickCount();
