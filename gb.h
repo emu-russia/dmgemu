@@ -24,3 +24,5 @@ extern unsigned long gb_timerclk; // time before next timer interrupt
 extern unsigned long gb_divbase;
 extern unsigned long gb_timbase;
 extern uint8_t gb_timshift;
+
+extern unsigned benchmark_sound, benchmark_gfx;

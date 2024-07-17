@@ -7,8 +7,8 @@ void ppu_refreshline();
 void ppu_vsync();
 
 
-
 extern unsigned lcd_WYline;
+extern uint8_t linebuffer[192];
 
 extern unsigned mainpal[64];
 #define BGP mainpal

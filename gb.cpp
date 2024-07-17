@@ -2,6 +2,7 @@
 #include "pch.h"
 
 int skip_introm = 0;
+unsigned benchmark_sound, benchmark_gfx;
 
 /* run on emu start */
 void gb_init()
