@@ -8,14 +8,14 @@ int lcd_effect = 1; // possible values: 0,1
 unsigned mainpal[64];  // 0-3 BG palette 4-7,8-11 - sprite palettes
 
 int screen_width, screen_height;
-static RGBQUAD* pbuf;
+static uint32_t* pbuf;
 
 /* milk to cofee */
-RGBQUAD dib_pal[] = {
-	{ 143, 231, 255 },   // color #0 (milk)
-	{ 95 , 176, 223 },   // color #1
-	{ 63 , 120, 144 },   // color #2
-	{ 31 , 56 , 79  }    // color #3 (cofee)
+uint32_t dib_pal[] = {
+	0xffe78f,		// color #0 (milk)
+	0xdfb05f,		// color #1
+	0x90783f,		// color #2
+	0x4f381f,		// color #3 (cofee)
 };
 
 SDL_Surface* output_surface = nullptr;
@@ -83,8 +83,8 @@ void sdl_win_init(int width, int height)
 	output_window = window;
 	output_surface = surface;
 
-	pbuf = new RGBQUAD[screen_width * screen_height];
-	memset(pbuf, 0, screen_width * screen_height * sizeof(RGBQUAD));
+	pbuf = new uint32_t[screen_width * screen_height];
+	memset(pbuf, 0, screen_width * screen_height * sizeof(uint32_t));
 }
 
 void sdl_win_shutdown()
@@ -117,11 +117,11 @@ void sdl_win_blit()
 	{
 		for (int x = 0; x < w; x++)
 		{
-			RGBQUAD color = pbuf[w * y + x];
+			uint32_t color = pbuf[w * y + x];
 
 			for (int s = 0; s < ScaleFactor; s++) {
 				for (int t = 0; t < ScaleFactor; t++) {
-					pixels[ScaleFactor * x + s + ((ScaleFactor * y + t) * output_surface->w)] = *(uint32_t *)&color;
+					pixels[ScaleFactor * x + s + ((ScaleFactor * y + t) * output_surface->w)] = color;
 				}
 			}
 		}
