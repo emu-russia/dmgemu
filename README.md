@@ -17,7 +17,33 @@ Controls:
 - F9: Switch LCD effect on/off
 - F12: Turn sound on/off
 
-Some screenshots:
+## Build for Windows
+
+Use Windows and VS2022. Open dmgemu.sln and click the Build button with your left heel.
+
+## Build for Linux
+
+In general, the build process is typical for Linux. First you get all the sources from Git. Then you call CMake/make
+
+```
+# Get source
+# Choose a suitable folder to store a clone of the repository, cd there and then
+git clone https://github.com/emu-russia/dmgemu.git
+cd dmgemu
+
+# Preliminary squats
+mkdir build
+cd build
+cmake ..
+make
+
+# Find the executable file in the depths of the build folder
+./dmgemu zelda.gb
+```
+
+If something doesn't work, you do it. You have red eyes for a reason. :penguin:
+
+## Some screenshots
 
 ![whc4e0b23f6744b0](/imgstore/whc4e0b23f6744b0.png)
 ![whc4e0b23fd946e8](/imgstore/whc4e0b23fd946e8.png)
