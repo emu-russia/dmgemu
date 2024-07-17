@@ -50,7 +50,7 @@ unsigned num_sprites = 0;
 
 uint8_t tilecachedata[0x2000*4*2];
 uint8_t tilecache[512];
-unsigned long bitxlat_t[16],bitxlat2_t[16],bitxlatM_t[16],bitxlat2M_t[16];
+uint32_t bitxlat_t[16],bitxlat2_t[16],bitxlatM_t[16],bitxlat2M_t[16];
 
 void tilecache_init(void) {
 	unsigned i,tmp;
@@ -66,12 +66,12 @@ void tilecache_init(void) {
 
 static uint8_t* getcell(unsigned celln,unsigned dir) {
 	uint8_t*dest=tilecachedata+((dir&0x40)<<9)+(celln<<6),*rp;
-	unsigned long *wp;
+	uint32_t*wp;
 	register unsigned b0,b1;
 	unsigned i;
 	if(!(tilecache[celln]&dir)) {
 		tilecache[celln]|=dir;
-		wp = (unsigned long *)dest;
+		wp = (uint32_t*)dest;
 		rp = vram+(celln<<4);
 		
 		if(dir&DIR_XMIRROR) 
@@ -98,7 +98,7 @@ void ppu_enumsprites()
 	unsigned h = ((R_LCDC & 4)<<1)+8;// ? (16) : (8); sprite height
 	unsigned line = (unsigned)(R_LY)+16;
 	unsigned i,j,ntosort;
-	register unsigned long tmp;
+	register uint32_t tmp;
 	num_sprites = 0;
 
 	
@@ -116,9 +116,9 @@ void ppu_enumsprites()
 		for(i=0;i<ntosort;i++) {
 			for(j=i+1;j<num_sprites;j++)
 				if(used_spr[i].x>used_spr[j].x) {
-					tmp=((unsigned long*)used_spr)[i];
-					((unsigned long*)used_spr)[i] = ((unsigned long*)used_spr)[j];
-					((unsigned long*)used_spr)[j] = tmp;
+					tmp=((uint32_t*)used_spr)[i];
+					((uint32_t*)used_spr)[i] = ((uint32_t*)used_spr)[j];
+					((uint32_t*)used_spr)[j] = tmp;
 				}
 		}
 		if(num_sprites>10) num_sprites = 10;
@@ -226,7 +226,7 @@ void ppu_refreshline(void) {
 void ppu_vsync()
 {
 	static int first = 1;
-	static unsigned long frame = 1;
+	static int frame = 1;
 	char title[64];
 	static unsigned oldtime[8][4],timepos=0;
 	unsigned time,i,bm_g,bm_o,bm_s;

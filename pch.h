@@ -22,7 +22,7 @@
 #include <sys/time.h>
 #endif
 
-#define MAXULONG (unsigned long)(-1)
+#define MAXULONG (uint32_t)(-1)
 
 /* project includes */
 #include "misc.h"

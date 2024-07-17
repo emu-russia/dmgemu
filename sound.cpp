@@ -144,7 +144,7 @@ void PlayWaveBuffer(struct WBuffer* w)
 	}
 }
 
-int InitSound(unsigned long freq)
+int InitSound(int freq)
 {
 	WAVEFORMATEX  format;
 	HRESULT         hr;

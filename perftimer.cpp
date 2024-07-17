@@ -8,7 +8,7 @@ Code requires x98 MMX CPU and Win32 VC5.0 compatible compiler.
 */
 
 
-// Timer () will return time passed from previous call in mksec as ulong
+// Timer () will return time passed from previous call in mksec as uint32_t
 
 static LARGE_INTEGER oldtimer,newtimer;
 static LARGE_INTEGER kf;
@@ -24,7 +24,7 @@ void Timer(void) {
 }
 
 // Get timer, no reset
-unsigned long GetTimer(void) {
+uint32_t GetTimer(void) {
 	QueryPerformanceCounter(&newtimer);
 
 	LARGE_INTEGER diff{};
@@ -36,16 +36,16 @@ unsigned long GetTimer(void) {
 }
 
 // Get timer and reset
-unsigned long GetTimerR(void) {
-	unsigned long t = GetTimer();
+uint32_t GetTimerR(void) {
+	uint32_t t = GetTimer();
 	oldtimer.QuadPart = newtimer.QuadPart;
 	return t;
 }
 
 void TimerTest() {
 	Timer();
-	unsigned long stamp1 = GetTimer();
+	uint32_t stamp1 = GetTimer();
 	::Sleep(1000);
-	unsigned long stamp2 = GetTimer();
-	printf("TimerTest, ticks between Sleep(1000): %d\n", stamp2 - stamp1);
+	uint32_t stamp2 = GetTimer();
+	printf("TimerTest, ticks between Sleep(1000), should be around 1'000'000: %d\n", stamp2 - stamp1);
 }

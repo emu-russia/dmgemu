@@ -33,9 +33,9 @@ void gb_shutdown()
 
 // **********************************************************************
 
-unsigned long gb_clk;
-unsigned long gb_eventclk; // timer before next possible interrupt/LCD mode change
-unsigned long gb_timerclk; // time before next timer interrupt
+uint32_t gb_clk;
+uint32_t gb_eventclk; // timer before next possible interrupt/LCD mode change
+uint32_t gb_timerclk; // time before next timer interrupt
 
 unsigned lcd_int_on;
 
@@ -68,18 +68,18 @@ void check4LYC(void) {  // Also called from mem.c!!
 	 check4LCDint(n);
 
 // **********************************************************************
-unsigned long gb_divbase;
-unsigned long gb_timbase;
+uint32_t gb_divbase;
+uint32_t gb_timbase;
 /* these variables are added to current gb clock to obtain
 	timer counter values in lower byte of result */
 uint8_t gb_timshift;	// input clock shift       1048576/(4,16,64,256)
 
 void gb_reload_tima(unsigned data) { // will only contain byte value
-	gb_timbase = data-(signed long)(gb_clk >> gb_timshift)-256;
+	gb_timbase = data-(int32_t)(gb_clk >> gb_timshift)-256;
 	gb_timerclk = ((gb_clk>>gb_timshift)-gb_timbase)<<gb_timshift;
 }
 
-static void execute(unsigned long n) {
+static void execute(uint32_t n) {
 	gb_eventclk+=n; // timerclk = MAXULONG means that timer interrupt is off
 	/*while(gb_eventclk>gb_timerclk) {
 		sm83_execute_until(gb_timerclk);
