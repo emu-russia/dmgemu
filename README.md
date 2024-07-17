@@ -6,17 +6,16 @@ Compatibility is pretty high.
 
 It is very portable with minimal code modifications and can be used for educational purposes.
 
-Controls in Windows:
+Controls:
 - Arrows: Arrows %)
 - A: SELECT
 - S: START
 - Z: B
 - X: A
 - Enter: press all buttons at once (to do game save or reset etc.)
-- Escape: exit emulator
 - F8: Switch frame limiter on/off
 - F9: Switch LCD effect on/off
-- F12: Turn sound on/off (maybe buggy)
+- F12: Turn sound on/off
 
 Some screenshots:
 

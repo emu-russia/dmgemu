@@ -550,7 +550,7 @@ static void init_internal_RAM(int how)
 	//dump_internal_RAM();
 }
 
-void mem_InitGeneric(void);
+static void mem_InitGeneric(void);
 
 void mem_init()
 {

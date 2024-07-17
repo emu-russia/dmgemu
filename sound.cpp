@@ -11,7 +11,17 @@ static DWORD gSndBufSize;
 
 #define NBUFFERS 3
 
-PCM pcm;
+struct PCM
+{
+	int hz, len;
+	int stereo;
+	uint8_t* buf;
+	int size;			// in bytes
+	int pos;
+	FILE* dump;
+};
+
+static PCM pcm;
 
 #define THRESHOLD1 (pcm.len*2)
 #define THRESHOLD2 (pcm.len*4)
@@ -28,6 +38,8 @@ struct WBuffer {
 } wavebuffer[NBUFFERS];
 
 int wb_current, wb_free;
+
+int pcm_submit(void);
 
 void FreeWaveBuffer(struct WBuffer* w) {
 
@@ -279,4 +291,19 @@ int pcm_submit(void)
 		if (++wb_current >= NBUFFERS) wb_current = 0;
 	}
 	return 0;
+}
+
+void pop_sample(int l, int r)
+{
+	if (!pcm.buf) return;
+
+	if (pcm.stereo) {
+		pcm.buf[pcm.pos] = l + 128;
+		pcm.buf[pcm.pos + 1] = r + 128;
+		pcm.pos += 2;
+	}
+	else {
+		pcm.buf[pcm.pos] = 128 + ((l + r) >> 1);
+		if (pcm.pos < pcm.len * 4) pcm.pos++;
+	}
 }

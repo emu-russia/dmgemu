@@ -9,8 +9,8 @@ union Z80reg r_af, r_bc, r_de, r_hl;
 union Z80reg r_sp, r_pc;
 unsigned HALT, IME;
 
-#define OP(n) break; case 0x##n##:
-#define CB(n) break; case 0x##n##:
+#define OP(n) break; case 0x##n:
+#define CB(n) break; case 0x##n:
 
 /* not implemented/reserved instruction */
 static void Undefined(void)

@@ -5,8 +5,6 @@ int lcd_scale = 4;
 int lcd_fpslimit = 1;
 int lcd_effect = 1; // possible values: 0,1
 
-unsigned mainpal[64];  // 0-3 BG palette 4-7,8-11 - sprite palettes
-
 int screen_width, screen_height;
 static uint32_t* pbuf;
 

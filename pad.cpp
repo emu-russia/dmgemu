@@ -24,12 +24,14 @@ uint8_t pad_hi()
 {
 	uint8_t pad = 0;
 
+#ifdef _WIN32
 	if(GetAsyncKeyState(VK_S) & 0x80000000) pad |= 8;      /* START */
 	if(GetAsyncKeyState(VK_A) & 0x80000000) pad |= 4;      /* SELECT */
 	if(GetAsyncKeyState(VK_Z) & 0x80000000) pad |= 2;      /* B */
 	if(GetAsyncKeyState(VK_X) & 0x80000000) pad |= 1;      /* A */
 
 	if(GetAsyncKeyState(VK_RETURN) & 0x80000000) pad |= 0xf;
+#endif
 
 	return pad;
 }
@@ -39,10 +41,12 @@ uint8_t pad_lo()
 {
 	uint8_t pad = 0;
 
+#ifdef _WIN32
 	if(GetAsyncKeyState(VK_DOWN) & 0x80000000) pad |= 8;    /* DOWN */
 	if(GetAsyncKeyState(VK_UP) & 0x80000000) pad |= 4;      /* UP */
 	if(GetAsyncKeyState(VK_LEFT) & 0x80000000) pad |= 2;    /* LEFT */
 	if(GetAsyncKeyState(VK_RIGHT) & 0x80000000) pad |= 1;   /* RIGHT */
+#endif
 
 	return pad;
 }

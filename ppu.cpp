@@ -3,6 +3,7 @@
 
 unsigned lcd_WYline;
 uint8_t linebuffer[192]; // showed from 8-th byte
+unsigned mainpal[64];  // 0-3 BG palette 4-7,8-11 - sprite palettes
 
 void tilecache_init(void);
 
