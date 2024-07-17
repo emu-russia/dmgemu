@@ -26,3 +26,4 @@ extern unsigned long gb_timbase;
 extern uint8_t gb_timshift;
 
 extern unsigned benchmark_sound, benchmark_gfx;
+extern int sound_enabled;

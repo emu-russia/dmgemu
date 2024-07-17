@@ -3,6 +3,7 @@
 
 int skip_introm = 0;
 unsigned benchmark_sound, benchmark_gfx;
+int sound_enabled = 1;
 
 /* run on emu start */
 void gb_init()

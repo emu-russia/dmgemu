@@ -19,18 +19,6 @@ uint32_t dib_pal[] = {
 SDL_Surface* output_surface = nullptr;
 SDL_Window* output_window = nullptr;
 
-//case VK_ESCAPE: DestroyWindow(hwnd); break;
-//case VK_F12:
-//	(sound_enabled) ? apu_shutdown() : apu_init(44100);
-//	sound_enabled ^= 1;
-//	break;
-//case VK_F8:
-//	lcd_fpslimit ^= 1;
-//	break;
-//case VK_F9:
-//	lcd_effect ^= 1; // possible values: 0,1
-//	break;
-
 void lcd_refresh(int line)
 {
 	int i;
@@ -96,9 +84,39 @@ void sdl_win_update()
 {
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
-		if (event.type == SDL_QUIT) {
-			gb_shutdown();
-			exit(0);
+
+		switch (event.type) {
+			case SDL_QUIT:
+				gb_shutdown();
+				exit(0);
+				break;
+
+			case SDL_KEYDOWN:
+			case SDL_KEYUP:
+				bool pressed = event.type == SDL_KEYDOWN;
+				switch (event.key.keysym.scancode) {
+					case SDL_SCANCODE_F12:
+						if (!pressed) {
+							(sound_enabled) ? apu_shutdown() : apu_init(44100);
+							sound_enabled ^= 1;
+						}
+						break;
+					case SDL_SCANCODE_F8:
+						if (!pressed) {
+							lcd_fpslimit ^= 1;
+						}
+						break;
+					case SDL_SCANCODE_F9:
+						if (!pressed) {
+							lcd_effect ^= 1;
+						}
+						break;
+
+					default:
+						pad_sdl_process(event.key.keysym.scancode, pressed);
+						break;
+				}
+				break;
 		}
 	}
 }
