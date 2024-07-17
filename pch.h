@@ -17,6 +17,10 @@
 #else
 #include <SDL2/SDL.h>
 #endif
+#ifdef _LINUX
+#include <unistd.h>
+#include <sys/time.h>
+#endif
 
 #define MAXULONG (unsigned long)(-1)
 

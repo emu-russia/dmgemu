@@ -22,7 +22,7 @@ add_executable (dmgemu
 	mem.cpp
 	misc.cpp
 	pad.cpp
-	perftimer.cpp
+	perftimer_linux.cpp
 	ppu.cpp
 	sm83.cpp
 	sound_sdl.cpp
