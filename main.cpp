@@ -1,39 +1,8 @@
 #include "pch.h"
 
-#define MAX_NUM_ARGVS 128
-int argc;
-char *argv[MAX_NUM_ARGVS];
-
-void ParseCommandLine(LPSTR lpCmdLine)
-{
-	argc = 1;
-	argv[0] = "exe";
-
-	while (*lpCmdLine && (argc < MAX_NUM_ARGVS))
-	{
-		while (*lpCmdLine && ((*lpCmdLine <= 32) || (*lpCmdLine > 126)))
-			lpCmdLine++;
-
-		if (*lpCmdLine)
-		{
-			argv[argc] = lpCmdLine;
-			argc++;
-
-			while (*lpCmdLine && ((*lpCmdLine > 32) && (*lpCmdLine <= 126)))
-				lpCmdLine++;
-
-			if (*lpCmdLine)
-			{
-				*lpCmdLine = 0;
-				lpCmdLine++;
-			}
-		}
-	}
-}
-
-
 char *Open_File_Proc()
 {
+#ifdef _WIN32
 	char prevc[256];
 	OPENFILENAME ofn;
 	char szFileName[120];
@@ -71,10 +40,12 @@ char *Open_File_Proc()
 		chdir(prevc);
 		return NULL;
 	}
+#else
+	return NULL;
+#endif
 }
 
-/* platform initialization code */
-void plat_init()
+int main(int argc, char **argv)
 {
 	char *name;
 
@@ -96,7 +67,14 @@ void plat_init()
 		}
 		load_game(argv[1]);
 	}
+
+	gb_init();
+	start();
+
+	return 0;
 }
+
+#ifdef _WIN32
 
 /* platform Entry-point */
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
@@ -106,9 +84,36 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	freopen("CONOUT$", "w", stdout);
 #endif
 
-	ParseCommandLine(lpCmdLine);
-	plat_init();
+	#define MAX_NUM_ARGVS 128
+	int argc;
+	char* argv[MAX_NUM_ARGVS];
 
-	gb_init();
-	start();
+	// ParseCommandLine
+	argc = 1;
+	argv[0] = "exe";
+
+	while (*lpCmdLine && (argc < MAX_NUM_ARGVS))
+	{
+		while (*lpCmdLine && ((*lpCmdLine <= 32) || (*lpCmdLine > 126)))
+			lpCmdLine++;
+
+		if (*lpCmdLine)
+		{
+			argv[argc] = lpCmdLine;
+			argc++;
+
+			while (*lpCmdLine && ((*lpCmdLine > 32) && (*lpCmdLine <= 126)))
+				lpCmdLine++;
+
+			if (*lpCmdLine)
+			{
+				*lpCmdLine = 0;
+				lpCmdLine++;
+			}
+		}
+	}
+
+	return main (argc, argv);
 }
+
+#endif // _WIN32

@@ -50,6 +50,9 @@
     <ClCompile Include="lcd.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="sound_sdl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gb.h">

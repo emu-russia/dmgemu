@@ -6,9 +6,17 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <time.h>
+#ifdef _WIN32
 #include <windows.h>
 #include <direct.h>
+#endif
+#define SDL_MAIN_HANDLED
+#ifdef _WIN32
 #include "SDL.h"
+#else
+#include <SDL2/SDL.h>
+#endif
 
 #define MAXULONG (unsigned long)(-1)
 

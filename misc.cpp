@@ -1,10 +1,7 @@
 /* misc. platform stuff */
 #include "pch.h"
 
-/* location of GB cart image in memory */
-//extern u_char *game;
-
-void sys_error(char *fmt, ...)
+void sys_error(const char *fmt, ...)
 {
 	va_list	arg;
 	char	buf[0x1000];
@@ -13,13 +10,17 @@ void sys_error(char *fmt, ...)
 	vsprintf(buf, fmt, arg);
 	va_end(arg);
 
+#ifdef _WIN32
 	MessageBox(NULL, buf, "SYSTEM ERROR", MB_OK | MB_TOPMOST | MB_ICONSTOP);
+#else
+	printf("SYSTEM ERROR: %s\n", buf);
+#endif
 	exit(1);
 }
 
 void rand_init()
 {
-	srand(GetTickCount() & 0xffff);
+	srand(time(0));
 }
 
 /* load game from file */
@@ -57,7 +58,7 @@ void show_regs()
 	int i, p = 0;
 
 	p += sprintf(&buf[p], "AF=%.4X\t\tBC=%.4X\t\tDE=%.4X\nHL=%.4X\n", R_AF, R_BC, R_DE, R_HL);
-	p += sprintf(&buf[p], "SP=%.4X\t\tPC=%.4X\t\tCLK=%i\n\n", R_SP, R_PC, gb_clk);
+	p += sprintf(&buf[p], "SP=%.4X\t\tPC=%.4X\t\tCLK=%d\n\n", R_SP, R_PC, (int)gb_clk);
 
 	p += sprintf(&buf[p], "P1=%.2X\t\tTIMA=%.2X\t\tIF=%.2X\n", HRAM(0xff00), HRAM(0xff05), HRAM(0xff0f));
 	p += sprintf(&buf[p], "SB=%.2X\t\tTMA=%.2X\t\tIE=%.2X\n", HRAM(0xff01), HRAM(0xff06), HRAM(0xffff));
@@ -85,7 +86,11 @@ void show_regs()
 	p += sprintf(&buf[p], "SCX=%.2X\t\tWX=%.2X\t\tOBP1=%.2X\n", HRAM(0xff43), HRAM(0xff4b), HRAM(0xff49));
 	p += sprintf(&buf[p], "SCY=%.2X\t\tWY=%.2X\n", HRAM(0xff42), HRAM(0xff4a));
 
+#ifdef _WIN32
 	MessageBox(NULL, buf, "GB SM83 and hardware register map", MB_OK | MB_TOPMOST | MB_ICONINFORMATION);
+#else
+	printf("GB SM83 and hardware register map: %s", buf);
+#endif
 }
 
 /* load battery-backed/onboard RAM */
@@ -144,7 +149,7 @@ void log_shutdown()
 	}
 }
 
-void __log(char *fmt, ...)
+void __log(const char *fmt, ...)
 {
 	va_list	arg;
 	char buf[0x1000]{};

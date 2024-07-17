@@ -25,7 +25,7 @@ add_executable (dmgemu
 	perftimer.cpp
 	ppu.cpp
 	sm83.cpp
-	sound.cpp
+	sound_sdl.cpp
 )
 
 target_link_libraries (dmgemu LINK_PUBLIC SDL2)
