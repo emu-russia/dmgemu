@@ -235,7 +235,6 @@ void ppu_vsync()
 	{
 		TimerInit();
 		Timer();
-		//fps_time = oldtime = GetTickCount();
 		first = 0;
 	}
 
@@ -267,13 +266,13 @@ void ppu_vsync()
 		bm_g/=8;
 		bm_s/=8;
 		bm_o=time-bm_s-bm_g;
-		//if(time)
-		//    sprintf(title, "GameBoy-%15s [%u fps]O:%02dG:%02dS:%02d", cart.title,
-		//	1000000/time,(bm_o*100)/time,(bm_g*100)/time,(bm_s*100)/time);
-		//else
+#if BENCHMARK
+		if(time)
+		    sprintf(title, "GameBoy - %15s [%u fps]O:%02dG:%02dS:%02d", cart.title,
+			1000000/time,(bm_o*100)/time,(bm_g*100)/time,(bm_s*100)/time);
+		else
+#endif
 			sprintf(title, "GameBoy - %s [%u fps]", cart.title, 1000000/time);
 		sdl_win_update_title(title);
 	}
-
-	//oldtime = GetTickCount();
 }
