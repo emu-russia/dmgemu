@@ -1,17 +1,12 @@
 /* GameBoy JOY pad emulation */
 #include "pch.h"
 
-#define VK_A	    0x41
-#define VK_S	    0x53
-#define VK_X	    0x58
-#define VK_Z	    0x5A
-#define VK_LEFT	    0x25
-#define VK_UP	    0x26
-#define VK_RIGHT	0x27
-#define VK_DOWN     0x28	
+static uint8_t pad_override[2];
 
 void pad_init()
 {
+	pad_override[0] = 0;
+	pad_override[1] = 0;
 }
 
 void pad_shutdown()
@@ -22,31 +17,54 @@ void pad_shutdown()
 
 uint8_t pad_hi()
 {
-	uint8_t pad = 0;
-
-#ifdef _WIN32
-	if(GetAsyncKeyState(VK_S) & 0x80000000) pad |= 8;      /* START */
-	if(GetAsyncKeyState(VK_A) & 0x80000000) pad |= 4;      /* SELECT */
-	if(GetAsyncKeyState(VK_Z) & 0x80000000) pad |= 2;      /* B */
-	if(GetAsyncKeyState(VK_X) & 0x80000000) pad |= 1;      /* A */
-
-	if(GetAsyncKeyState(VK_RETURN) & 0x80000000) pad |= 0xf;
-#endif
-
-	return pad;
+	return pad_override[0];
 }
-
 
 uint8_t pad_lo()
 {
-	uint8_t pad = 0;
+	return pad_override[1];
+}
 
-#ifdef _WIN32
-	if(GetAsyncKeyState(VK_DOWN) & 0x80000000) pad |= 8;    /* DOWN */
-	if(GetAsyncKeyState(VK_UP) & 0x80000000) pad |= 4;      /* UP */
-	if(GetAsyncKeyState(VK_LEFT) & 0x80000000) pad |= 2;    /* LEFT */
-	if(GetAsyncKeyState(VK_RIGHT) & 0x80000000) pad |= 1;   /* RIGHT */
-#endif
+void pad_sdl_process(SDL_Scancode scan, bool pressed)
+{
+	switch (scan) {
+		case SDL_SCANCODE_S:	/* START */
+			if (pressed) pad_override[0] |= 8;
+			else pad_override[0] &= ~8;
+			break;
+		case SDL_SCANCODE_A:	/* SELECT */
+			if (pressed) pad_override[0] |= 4;
+			else pad_override[0] &= ~4;
+			break;
+		case SDL_SCANCODE_Z:	/* B */
+			if (pressed) pad_override[0] |= 2;
+			else pad_override[0] &= ~2;
+			break;
+		case SDL_SCANCODE_X:	/* A */
+			if (pressed) pad_override[0] |= 1;
+			else pad_override[0] &= ~1;
+			break;
 
-	return pad;
+		case SDL_SCANCODE_RETURN:	/* All Buttons */
+			if (pressed) pad_override[0] |= 0xf;
+			else pad_override[0] &= ~0xf;
+			break;
+
+		case SDL_SCANCODE_DOWN:	/* DOWN */
+			if (pressed) pad_override[1] |= 8;
+			else pad_override[1] &= ~8;
+			break;
+		case SDL_SCANCODE_UP:	/* UP */
+			if (pressed) pad_override[1] |= 4;
+			else pad_override[1] &= ~4;
+			break;
+		case SDL_SCANCODE_LEFT:	/* LEFT */
+			if (pressed) pad_override[1] |= 2;
+			else pad_override[1] &= ~2;
+			break;
+		case SDL_SCANCODE_RIGHT:	/* RIGHT */
+			if (pressed) pad_override[1] |= 1;
+			else pad_override[1] &= ~1;
+			break;
+	}
 }
