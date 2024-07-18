@@ -1,6 +1,7 @@
 // SO (sound output) terminal emulation (via SDL2)
 #include "pch.h"
 
+#define WAV_CHANNELS            2
 #define WAV_BUFFER_SIZE         6144
 
 SDL_AudioSpec spec;
@@ -16,21 +17,15 @@ bool Dma;
 
 static void SDLCALL Mixer(void* unused, Uint8* stream, int len)
 {
-	if (Dma) {
-		SDL_MixAudioFormat(stream, (const Uint8*)SampleBuf, AUDIO_S16SYS, len, SDL_MIX_MAXVOLUME);
-		Dma = false;
-	}
-	else {
-		memset(SampleBuf, 0, SampleBuf_Size * 2);
-		SDL_PauseAudioDevice(dev_id, 1);
-	}
+	memcpy(stream, SampleBuf, len);
+	SampleBuf_Ptr = 0;
 }
 
 int InitSound(int freq)
 {
 	SampleBuf_Size = WAV_BUFFER_SIZE;
-	SampleBuf = new int8_t[SampleBuf_Size * 2];
-	memset(SampleBuf, 0, SampleBuf_Size * 2);
+	SampleBuf = new int8_t[SampleBuf_Size * WAV_CHANNELS];
+	memset(SampleBuf, 0, SampleBuf_Size * WAV_CHANNELS);
 	SampleBuf_Ptr = 0;
 
 	if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) {
@@ -40,13 +35,13 @@ int InitSound(int freq)
 
 	spec.freq = freq;
 	spec.format = AUDIO_S8;
-	spec.channels = 2;
-	spec.samples = SampleBuf_Size;
+	spec.channels = WAV_CHANNELS;
+	spec.samples = WAV_BUFFER_SIZE;
 	spec.callback = Mixer;
 	spec.userdata = nullptr;
 
 	dev_id = SDL_OpenAudioDevice(NULL, 0, &spec, &spec_obtainted, 0);
-	SDL_PauseAudioDevice(dev_id, 1);
+	SDL_PauseAudioDevice(dev_id, 0);
 	return 0;
 }
 
@@ -57,21 +52,14 @@ void FreeSound(void)
 	delete[] SampleBuf;
 }
 
-static void Playback()
-{
-	Dma = 1;
-	SDL_PauseAudioDevice(dev_id, 0);
-	SampleBuf_Ptr = 0;
-}
-
 void pop_sample(int l, int r)
 {
-	SampleBuf[2 * SampleBuf_Ptr] = l;
-	SampleBuf[2 * SampleBuf_Ptr + 1] = r;
+	SampleBuf[WAV_CHANNELS * SampleBuf_Ptr] = l;
+	SampleBuf[WAV_CHANNELS * SampleBuf_Ptr + 1] = r;
 	SampleBuf_Ptr++;
 
 	if (SampleBuf_Ptr >= SampleBuf_Size)
 	{
-		Playback();
+		SampleBuf_Ptr = 0;
 	}
 }
