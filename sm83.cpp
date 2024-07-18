@@ -78,7 +78,7 @@ static uint8_t swap_t[256];			// Preswapped values
 // 8 bit signed value assumed!!!
 #define ADDSPX(n)  \
 	tmp32 = (unsigned)R_SP + (signed)(signed char)n;\
-	R_F = (uint8_t)((((signed)(signed char)n^tmp32^R_SP)&HFh)>>8\
+	R_F = (uint8_t)((((signed)(signed char)n^tmp32^R_SP)&HF)>>8\
 		| (tmp32>>16)&CF);
 
 #define LDHLSP(n) { ADDSPX(n);R_HL = (uint16_t)tmp32; }
@@ -87,18 +87,20 @@ static uint8_t swap_t[256];			// Preswapped values
 // 8 or 16 bit unsigned value assumed
 #define ADDHL(n) { \
 	tmp32 = (unsigned)R_HL + n; \
-	r_af.hl = (uint16_t)(r_af.hl&(ZFh|0xFF) |\
-		HFh & (tmp32^(unsigned)R_HL^n) | (tmp32>>8) & CFh);\
+	R_F = (uint16_t)(R_A&(ZF|0xFF) |\
+		HF & (tmp32^(unsigned)R_HL^n) | (tmp32>>8) & CF);\
 	R_HL = (uint16_t)tmp32; }/*T*/
 
 #define ADD(n) { \
 	tmp32 = (unsigned)R_A + n;\
-	r_af.hl = (uint16_t)(((HF & (tmp32^(unsigned)R_A^n))|zr_t[(uint8_t)tmp32])<<8 | tmp32/*CF*/); \
+	R_F = (uint16_t)(((HF & (tmp32^(unsigned)R_A^n))|zr_t[(uint8_t)tmp32]) | (tmp32>>8)?CF:0); \
+	R_A = (uint8_t)tmp32;\
 }
 
 #define ADC(n) { \
-	tmp32 = (unsigned)R_A + n + (R_F&CF);\
-	r_af.hl = (uint16_t)(((HF & (tmp32^(unsigned)R_A^n))|zr_t[(uint8_t)tmp32])<<8 | tmp32/*CF*/); \
+	tmp32 = (unsigned)R_A + n + (R_F&CF)?1:0;\
+	R_F = (uint16_t)(((HF & (tmp32^(unsigned)R_A^n))|zr_t[(uint8_t)tmp32]) | (tmp32>>8)?CF:0); \
+	R_A = (uint8_t)tmp32;\
 }
 
 
@@ -107,12 +109,12 @@ static uint8_t swap_t[256];			// Preswapped values
 // TODO:check    I did just like Faizullin did, don't know if it right
 #define CP(n) { \
 	tmp32 = (unsigned)R_A - (unsigned)n; \
-	R_F   = (uint8_t)((HF & (tmp32^R_A^n)) | -(signed)(tmp32 >> 8)) | zr_t[(uint8_t)tmp32] | NF;\
+	R_F   = (uint8_t)((HF & (tmp32^R_A^n)) | -(signed)(tmp32 >> 8)?CF:0) | zr_t[(uint8_t)tmp32] | NF;\
 }
 
 #define SBC(n) { \
-	tmp32 = (unsigned)R_A - (unsigned)n-(R_F&CF); \
-	R_F   = (uint8_t)((HF & (tmp32^R_A^n)) | -(signed)(tmp32 >> 8)) | zr_t[(uint8_t)tmp32] | NF;\
+	tmp32 = (unsigned)R_A - (unsigned)n - (R_F&CF?1:0); \
+	R_F   = (uint8_t)((HF & (tmp32^R_A^n)) | -(signed)(tmp32 >> 8)?CF:0) | zr_t[(uint8_t)tmp32] | NF;\
 	R_A = (uint8_t)tmp32;\
 }
 
