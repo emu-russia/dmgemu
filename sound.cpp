@@ -21,7 +21,7 @@ static void SDLCALL Mixer(void* unused, Uint8* stream, int len)
 {
 	int dist = SampleBuf_WrPtr - SampleBuf_RdPtr;
 	if (dist < 0) dist = -dist;
-	if (dist < len * WAV_CHANNELS) {
+	if (dist * WAV_CHANNELS < len) {
 		return;
 	}
 
