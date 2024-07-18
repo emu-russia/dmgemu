@@ -372,16 +372,15 @@ OP(34) { tmp8 = RD(R_HL); INC(tmp8); WR(R_HL, tmp8); } // INC (HL)
 OP(35) {
 	tmp8 = RD(R_HL); DEC(tmp8); WR(R_HL, tmp8); } // DEC (HL)
 OP(36) { tmp8=FETCH();WR(R_HL, tmp8); }			// LD (HL),n
-OP(37) { R_F = (R_F & (uint8_t)~(HF | NF)) | (uint8_t)CF; }	// SCF
+OP(37) { R_F = (R_F & (CF|ZF)) | CF; }	// SCF
 OP(38) { JR(CF) } //JRC PC+n
 OP(39) { ADDHL(R_SP); }					// ADD HL,(SP)
-OP(3A) { R_A = RD(R_HL); R_HL--;}			// [GB] LD A,(HL--)
+OP(3A) { R_A = RD(R_HL); R_HL--;}		// [GB] LD A,(HL--)
 OP(3B) { R_SP--; }						// DEC SP
 OP(3C) { INC(R_A); }					// INC A
 OP(3D) { DEC(R_A); }					// DEC A
 OP(3E) { R_A = FETCH(); }				// LD A,n
-OP(3F) { R_F = ((R_F & (uint8_t)(ZF|CF)) |
-				(R_F&(uint8_t)CF)<<(uint8_t)(HF_POS-CF_POS)) ^ (uint8_t)CF; }// CCF
+OP(3F) { R_F = (R_F & (CF|ZF)) ^ CF; }	// CCF
 OP(40) {}								// LD B,B
 OP(41) { R_B = R_C; }					// LD B,C
 OP(42) { R_B = R_D; }					// LD B,D
