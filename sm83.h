@@ -1,5 +1,6 @@
 #pragma once
 
+// If the build is for processors like PowerPC (e.g. GameCube), then activate this macro.
 //#define BIGENDIAN
 
 #pragma pack(push, 1)
@@ -12,7 +13,7 @@ union Z80reg {
 #endif
 	};
 	uint16_t hl;
-	unsigned align; // So 1 Z80reg record will be always equal to CPU word size
+	unsigned align; // So 1 Z80reg instance will be always equal to CPU word size
 };
 #pragma pack(pop)
 
@@ -22,21 +23,14 @@ extern union Z80reg r_sp, r_pc;
 extern unsigned HALT, IME;
 
 #define R_AF r_af.hl
-/*
- direct usage of AF register is not allowed in my CPU core,
- because i swapped A and F to speedup some calculations
- TODO: wtf?
-*/
-
 #define R_BC r_bc.hl
 #define R_DE r_de.hl
 #define R_HL r_hl.hl
 #define R_SP r_sp.hl
 #define R_PC r_pc.hl
 
-
-#define R_A r_af.l
-#define R_F r_af.h
+#define R_A r_af.h
+#define R_F r_af.l
 #define R_B r_bc.h
 #define R_C r_bc.l
 #define R_D r_de.h
@@ -46,21 +40,15 @@ extern unsigned HALT, IME;
 
 /* flags */
 
-// TODO: wtf?
-#define ZF_POS 6 
-#define NF_POS 1
-#define HF_POS 4
-#define CF_POS 0
+#define ZF_POS 7
+#define NF_POS 6
+#define HF_POS 5
+#define CF_POS 4
 
 #define ZF (uint8_t)(1<<ZF_POS)
 #define NF (uint8_t)(1<<NF_POS)
 #define HF (uint8_t)(1<<HF_POS)
 #define CF (uint8_t)(1<<CF_POS)
-
-#define ZFh (uint16_t)(0x100<<ZF_POS)
-#define NFh (uint16_t)(0x100<<NF_POS)
-#define HFh (uint16_t)(0x100<<HF_POS)
-#define CFh (uint16_t)(0x100<<CF_POS)
 
 /* CPU interface */
 void sm83_init();
