@@ -44,13 +44,10 @@
     <ClCompile Include="apu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sound.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="lcd.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sound_sdl.cpp">
+    <ClCompile Include="sound.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="perftimer_linux.cpp">
