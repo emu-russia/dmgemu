@@ -199,13 +199,13 @@
     </ClCompile>
     <ClCompile Include="perftimer.cpp" />
     <ClCompile Include="apu.cpp" />
-    <ClCompile Include="sound.cpp" />
-    <ClCompile Include="sound_sdl.cpp">
+    <ClCompile Include="sound.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="sound_sdl.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gb.h" />

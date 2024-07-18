@@ -17,14 +17,7 @@ bool Dma;
 
 static void SDLCALL Mixer(void* unused, Uint8* stream, int len)
 {
-	if (Dma) {
-		SDL_MixAudioFormat(stream, (const Uint8*)SampleBuf, AUDIO_S16SYS, len, SDL_MIX_MAXVOLUME);
-		Dma = false;
-	}
-	else {
-		memset(SampleBuf, 0, SampleBuf_Size * WAV_CHANNELS);
-		SDL_PauseAudioDevice(dev_id, 1);
-	}
+	memcpy(stream, SampleBuf, len);
 }
 
 int InitSound(int freq)
@@ -47,7 +40,7 @@ int InitSound(int freq)
 	spec.userdata = nullptr;
 
 	dev_id = SDL_OpenAudioDevice(NULL, 0, &spec, &spec_obtainted, 0);
-	SDL_PauseAudioDevice(dev_id, 1);
+	SDL_PauseAudioDevice(dev_id, 0);
 	return 0;
 }
 
@@ -58,13 +51,6 @@ void FreeSound(void)
 	delete[] SampleBuf;
 }
 
-static void Playback()
-{
-	Dma = 1;
-	SDL_PauseAudioDevice(dev_id, 0);
-	SampleBuf_Ptr = 0;
-}
-
 void pop_sample(int l, int r)
 {
 	SampleBuf[WAV_CHANNELS * SampleBuf_Ptr] = l;
@@ -73,6 +59,6 @@ void pop_sample(int l, int r)
 
 	if (SampleBuf_Ptr >= SampleBuf_Size)
 	{
-		Playback();
+		SampleBuf_Ptr = 0;
 	}
 }
