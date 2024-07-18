@@ -18,6 +18,7 @@ bool Dma;
 static void SDLCALL Mixer(void* unused, Uint8* stream, int len)
 {
 	memcpy(stream, SampleBuf, len);
+	SampleBuf_Ptr = 0;
 }
 
 int InitSound(int freq)
@@ -35,7 +36,7 @@ int InitSound(int freq)
 	spec.freq = freq;
 	spec.format = AUDIO_S8;
 	spec.channels = WAV_CHANNELS;
-	spec.samples = 1024;
+	spec.samples = WAV_BUFFER_SIZE;
 	spec.callback = Mixer;
 	spec.userdata = nullptr;
 

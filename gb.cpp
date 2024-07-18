@@ -1,7 +1,7 @@
 /* GameBoy emu control */
 #include "pch.h"
 
-int skip_introm = 1;
+int skip_introm = 0;
 unsigned benchmark_sound, benchmark_gfx;
 int sound_enabled = 1;
 
