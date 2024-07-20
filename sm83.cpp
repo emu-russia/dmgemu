@@ -85,8 +85,8 @@ static uint8_t swap_t[256];			// Preswapped values
 // 8 or 16 bit unsigned value assumed
 #define ADDHL(n) { \
 	tmp32 = (unsigned)R_HL + n; \
-	R_F = (uint16_t)(R_A&(ZF|0xFF) | HF & (tmp32^(unsigned)R_HL^n) | (tmp32>>8)?CF:0);\
-	R_HL = (uint16_t)tmp32; }/*T*/
+	R_F = (R_F & ZF) | (HF & (tmp32^(unsigned)R_HL^n)) | ((tmp32>>8)?CF:0);\
+	R_HL = (uint16_t)tmp32; }
 
 #define ADD(n) { \
 	tmp32 = (unsigned)R_A + n;\
@@ -838,7 +838,7 @@ OP(F4) {Undefined();}			// [SM83] NOT implemented
 OP(F5) { PUSHAF; }					// PUSH AF
 OP(F6) { tmp8=FETCH();OR(tmp8); }					// OR A,n
 OP(F7) { RST(0x30); }					// RST 30h
-OP(F8) { tmp8 = FETCH(); LDHLSP(tmp8); }// [SM83] LDHL SP,n  (LEA HL,[SP+n])
+OP(F8) { tmp8 = FETCH(); LDHLSP(tmp8); }// [SM83] LDHL SP,n
 OP(F9) { R_SP = R_HL; }					// LD SP,HL
 OP(FA) { 
 	tmp32 = FETCH16();R_A = RD(tmp32); }// [SM83] LD A,(nn)
