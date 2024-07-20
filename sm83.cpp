@@ -33,33 +33,27 @@ static uint8_t swap_t[256];			// Preswapped values
 *******
 */
 
-/* _op_ paremeter must be "+=" for DAA and "-=" for DAS operation
- (in Z80 determined by NF flag, in X86 DAS and DAA have different opcodes)
-*/
-#define _DAA(_op_) {\
+#define _DAA() {\
 		if((tmp32&0xF)>9 || R_F&HF) {\
-			tmp32 _op_ 6;\
-			tmp8|=(uint8_t)HF;\
+			tmp32 += 6;\
 		}\
-		if(tmp32 > 0x99) {\
-			tmp32 _op_ 0x60;\
-			tmp8|=(uint8_t)CF;\
-}		}
-
-
-// this _DAS macros added for VGB compatibility, not really needed
-#define _DAS(_op_) {\
-		if((tmp8=R_F)&HF) {\
-			tmp32 _op_ 6;\
-			if((signed)tmp32<0) tmp8&=CF;\
+		if(tmp32 > 0x9F || R_F&CF) {\
+			tmp32 += 0x60;\
 		}\
-		if(tmp8&CF)\
-			tmp32 _op_ 0x60;\
+}
+
+#define _DAS() {\
+		if(R_F&HF) {\
+			tmp32 = (tmp32 - 6) & 0xff;\
+		}\
+		if(tmp8&CF) {\
+			tmp32 -= 0x60;\
+		}\
 }
 
 #define DAA(x) {\
-	tmp32=(unsigned)R_A+((unsigned)(R_F&CF?1:0)<<8);\
-	if(tmp8=(R_F&NF)) _DAS(-=) else _DAA(+=)\
+	tmp32=(unsigned)R_A;\
+	if(tmp8=(R_F&NF)) _DAS() else _DAA();\
 	R_A = (uint8_t)tmp32;\
 	R_F = tmp8 | zr_t[R_A];\
 }
@@ -74,15 +68,15 @@ static uint8_t swap_t[256];			// Preswapped values
 #define POPAF  { r_af.l=RD(R_SP)&(ZF|NF|HF|CF); R_SP++; r_af.h=RD(R_SP); R_SP++; }
 
 
+// TODO: Look in the ALU circuitry to see what the hell is going on here
 #define ADDSPX(n)  \
-	tmp32 = (unsigned)R_SP + (signed)(signed char)n;\
-	R_F = (uint8_t)(((signed)(signed char)n^tmp32^R_SP) & 0x1000 ? HF : 0) \
-		| ((tmp32 & 0x10000)?CF:0);
+	tmp32 = (unsigned)R_SP + (int16_t)(int8_t)n;\
+	R_F = ((R_SP & 0xf) + ((int16_t)(int8_t)n & 0xf)) > 0xf ? HF : 0;\
+	R_F |= ((R_SP & 0xff) + ((int16_t)(int8_t)n & 0xff)) > 0xff ? CF : 0;
 
 #define LDHLSP(n) { ADDSPX(n);R_HL = (uint16_t)tmp32; }
 #define ADDSP(n) { ADDSPX(n);R_SP = (uint16_t)tmp32; }
 
-// 8 or 16 bit unsigned value assumed
 #define ADDHL(n) { \
 	tmp32 = (unsigned)R_HL + n; \
 	R_F = (R_F & ZF) | ((tmp32^(unsigned)R_HL^n) & 0x1000 ? HF : 0 ) | ((tmp32&0x10000)?CF:0);\
@@ -306,7 +300,7 @@ void sm83_execute_until(uint32_t clk_nextevent)
 {
 	/* temporaries for calculations */
 uint8_t tmp8;
-unsigned tmp32; 
+unsigned tmp32;
 if(HALT) {gb_clk=clk_nextevent;return;}//clkmax;}
 while(gb_clk<clk_nextevent) {
 		register unsigned opcode;
