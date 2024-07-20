@@ -76,8 +76,8 @@ static uint8_t swap_t[256];			// Preswapped values
 
 #define ADDSPX(n)  \
 	tmp32 = (unsigned)R_SP + (signed)(signed char)n;\
-	R_F = (uint8_t)((((signed)(signed char)n^tmp32^R_SP)&HF)>>8\
-		| (tmp32>>16)?CF:0);
+	R_F = (uint8_t)(((signed)(signed char)n^tmp32^R_SP) & 0x1000 ? HF : 0) \
+		| ((tmp32 & 0x10000)?CF:0);
 
 #define LDHLSP(n) { ADDSPX(n);R_HL = (uint16_t)tmp32; }
 #define ADDSP(n) { ADDSPX(n);R_SP = (uint16_t)tmp32; }
@@ -85,18 +85,18 @@ static uint8_t swap_t[256];			// Preswapped values
 // 8 or 16 bit unsigned value assumed
 #define ADDHL(n) { \
 	tmp32 = (unsigned)R_HL + n; \
-	R_F = (R_F & ZF) | (HF & (tmp32^(unsigned)R_HL^n)) | ((tmp32>>8)?CF:0);\
+	R_F = (R_F & ZF) | ((tmp32^(unsigned)R_HL^n) & 0x1000 ? HF : 0 ) | ((tmp32&0x10000)?CF:0);\
 	R_HL = (uint16_t)tmp32; }
 
 #define ADD(n) { \
 	tmp32 = (unsigned)R_A + n;\
-	R_F = (uint16_t)(((HF & (tmp32^(unsigned)R_A^n))|zr_t[(uint8_t)tmp32]) | (tmp32>>8)?CF:0); \
+	R_F = ((tmp32^(unsigned)R_A^n)&0x10 ? HF : 0) | zr_t[(uint8_t)tmp32] | ((tmp32&0x100)?CF:0); \
 	R_A = (uint8_t)tmp32;\
 }
 
 #define ADC(n) { \
 	tmp32 = (unsigned)R_A + n + (R_F&CF)?1:0;\
-	R_F = (uint16_t)(((HF & (tmp32^(unsigned)R_A^n))|zr_t[(uint8_t)tmp32]) | (tmp32>>8)?CF:0); \
+	R_F = ((tmp32^(unsigned)R_A^n)&0x10 ? HF : 0) | zr_t[(uint8_t)tmp32] | ((tmp32&0x100)?CF:0); \
 	R_A = (uint8_t)tmp32;\
 }
 
@@ -105,12 +105,12 @@ static uint8_t swap_t[256];			// Preswapped values
 
 #define CP(n) { \
 	tmp32 = (unsigned)R_A - (unsigned)n; \
-	R_F   = (uint8_t)((HF & (tmp32^R_A^n)) | -(signed)(tmp32 >> 8)?CF:0) | zr_t[(uint8_t)tmp32] | NF;\
+	R_F   = ((tmp32^R_A^n)&0x10 ? HF : 0) | (-(signed)(tmp32 >> 8)?CF:0) | zr_t[(uint8_t)tmp32] | NF;\
 }
 
 #define SBC(n) { \
 	tmp32 = (unsigned)R_A - (unsigned)n - (R_F&CF?1:0); \
-	R_F   = (uint8_t)((HF & (tmp32^R_A^n)) | -(signed)(tmp32 >> 8)?CF:0) | zr_t[(uint8_t)tmp32] | NF;\
+	R_F   = ((tmp32^R_A^n)&0x10 ? HF : 0) | (-(signed)(tmp32 >> 8)?CF:0) | zr_t[(uint8_t)tmp32] | NF;\
 	R_A = (uint8_t)tmp32;\
 }
 

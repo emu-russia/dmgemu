@@ -45,10 +45,10 @@ extern unsigned HALT, IME;
 #define HF_POS 5
 #define CF_POS 4
 
-#define ZF (uint8_t)(1<<ZF_POS)
-#define NF (uint8_t)(1<<NF_POS)
-#define HF (uint8_t)(1<<HF_POS)
-#define CF (uint8_t)(1<<CF_POS)
+#define ZF ((uint8_t)(1<<ZF_POS))
+#define NF ((uint8_t)(1<<NF_POS))
+#define HF ((uint8_t)(1<<HF_POS))
+#define CF ((uint8_t)(1<<CF_POS))
 
 /* CPU interface */
 void sm83_init();
