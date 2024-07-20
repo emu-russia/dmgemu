@@ -361,7 +361,7 @@ OP(2B) { R_HL--; }						// DEC HL
 OP(2C) { INC(R_L); }					// INC L
 OP(2D) { DEC(R_L); }					// DEC L
 OP(2E) { R_L = FETCH(); }				// LD L,n
-OP(2F) { R_A = ~R_A; R_F = R_F&(CF|ZF) | (HF|NF); }// CPL
+OP(2F) { R_A = ~R_A; R_F |= (HF|NF); }	// CPL
 OP(30) { JRN(CF) } //JRNC PC+n
 OP(31) { R_SP=FETCH16(); } // LD SP,nn
 OP(32) { WR(R_HL, R_A);R_HL--; }				// [GB] LD (HL--),A
