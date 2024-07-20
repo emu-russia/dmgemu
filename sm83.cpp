@@ -58,7 +58,7 @@ static uint8_t swap_t[256];			// Preswapped values
 }
 
 #define DAA(x) {\
-	tmp32=(unsigned)R_A+((unsigned)(R_F&CF)<<8);\
+	tmp32=(unsigned)R_A+((unsigned)(R_F&CF?1:0)<<8);\
 	if(tmp8=(R_F&NF)) _DAS(-=) else _DAA(+=)\
 	R_A = (uint8_t)tmp32;\
 	R_F = tmp8 | zr_t[R_A];\
