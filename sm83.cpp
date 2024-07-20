@@ -71,7 +71,7 @@ static uint8_t swap_t[256];			// Preswapped values
 
 
 #define PUSHAF { R_SP--; WR(R_SP, r_af.h); R_SP--; WR(R_SP, r_af.l); }
-#define POPAF  { r_af.l=RD(R_SP); R_SP++; r_af.h=RD(R_SP)&(ZF|NF|HF|CF); R_SP++; }
+#define POPAF  { r_af.l=RD(R_SP)&(ZF|NF|HF|CF); R_SP++; r_af.h=RD(R_SP); R_SP++; }
 
 
 #define ADDSPX(n)  \
