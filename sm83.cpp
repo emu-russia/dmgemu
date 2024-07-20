@@ -95,7 +95,7 @@ static uint8_t swap_t[256];			// Preswapped values
 }
 
 #define ADC(n) { \
-	tmp32 = (unsigned)R_A + n + (R_F&CF)?1:0;\
+	tmp32 = (unsigned)R_A + n + ((R_F&CF)?1:0);\
 	R_F = ((tmp32^(unsigned)R_A^n)&0x10 ? HF : 0) | zr_t[(uint8_t)tmp32] | ((tmp32&0x100)?CF:0); \
 	R_A = (uint8_t)tmp32;\
 }
@@ -109,7 +109,7 @@ static uint8_t swap_t[256];			// Preswapped values
 }
 
 #define SBC(n) { \
-	tmp32 = (unsigned)R_A - (unsigned)n - (R_F&CF?1:0); \
+	tmp32 = (unsigned)R_A - (unsigned)n - ((R_F&CF)?1:0); \
 	R_F   = ((tmp32^R_A^n)&0x10 ? HF : 0) | (-(signed)(tmp32 >> 8)?CF:0) | zr_t[(uint8_t)tmp32] | NF;\
 	R_A = (uint8_t)tmp32;\
 }
