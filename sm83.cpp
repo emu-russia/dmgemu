@@ -133,7 +133,7 @@ static uint8_t swap_t[256];			// Preswapped values
 	r = (uint8_t)(((unsigned)r << 7) | ((unsigned)r >> 1)); }
 #define RLA(r) { \
 	tmp8 = r; \
-	r = (uint8_t)((unsigned)r << 1) | (unsigned)(R_F & CF ? 1 : 0); \
+	r = (uint8_t)(((unsigned)r << 1) | (unsigned)(R_F & CF ? 1 : 0)); \
 	R_F = tmp8 & 0x80 ? CF : 0;}
 #define RRA(r) { \
 	tmp8 = r; \
@@ -151,7 +151,7 @@ static uint8_t swap_t[256];			// Preswapped values
 	R_F |= zr_t[r]; }
 #define RL(r) { \
 	tmp32 = r; \
-	r = (uint8_t)((unsigned)r << 1) | (unsigned)(R_F & CF ? 1 : 0); \
+	r = (uint8_t)(((unsigned)r << 1) | (unsigned)(R_F & CF ? 1 : 0)); \
 	R_F = zr_t[r] | (uint8_t)(tmp32 & 0x80 ? CF : 0);}
 #define RR(r) { \
 	tmp32 = (unsigned)R_F & CF ? 0x80 : 0; \
