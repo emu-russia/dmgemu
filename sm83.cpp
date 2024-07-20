@@ -73,7 +73,8 @@ static uint8_t swap_t[256];			// Preswapped values
 
 #define ADDSPX(n)  \
 	tmp32 = (unsigned)R_SP + (int16_t)(int8_t)n;\
-	R_F = ((tmp32^(unsigned)R_SP^n)&0x10 ? HF : 0) | ((tmp32&0x100)?CF:0);
+	R_F = ((R_SP & 0xf) + ((int16_t)(int8_t)n & 0xf)) > 0xf ? HF : 0;\
+	R_F |= ((R_SP & 0xff) + ((int16_t)(int8_t)n & 0xff)) > 0xff ? CF : 0;
 
 #define LDHLSP(n) { ADDSPX(n);R_HL = (uint16_t)tmp32; }
 #define ADDSP(n) { ADDSPX(n);R_SP = (uint16_t)tmp32; }
