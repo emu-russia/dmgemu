@@ -34,16 +34,16 @@ static uint8_t swap_t[256];			// Preswapped values
 */
 
 #define _DAA() {\
-		if((tmp32&0xF)>9 || R_F&HF) {\
+		if((tmp32&0xF)>9 || tmp8&HF) {\
 			tmp32 += 6;\
 		}\
-		if(tmp32 > 0x9F || R_F&CF) {\
+		if(tmp32 > 0x9F || tmp8&CF) {\
 			tmp32 += 0x60;\
 		}\
 }
 
 #define _DAS() {\
-		if(R_F&HF) {\
+		if(tmp8&HF) {\
 			tmp32 = (tmp32 - 6) & 0xff;\
 		}\
 		if(tmp8&CF) {\
@@ -51,11 +51,12 @@ static uint8_t swap_t[256];			// Preswapped values
 		}\
 }
 
-#define DAA(x) {\
+#define DAA() {\
 	tmp32=(unsigned)R_A;\
-	if(tmp8=(R_F&NF)) _DAS() else _DAA();\
+	tmp8=R_F&(NF|HF|CF); \
+	if(tmp8&NF) _DAS() else _DAA();\
 	R_A = (uint8_t)tmp32;\
-	R_F = tmp8 | zr_t[R_A];\
+	R_F = (tmp8 & ~HF) | (tmp32&0x100?CF:0) | zr_t[R_A];\
 }
 
 
@@ -347,7 +348,7 @@ OP(23) { R_HL++; }						// INC HL
 OP(24) { INC(R_H); }					// INC H
 OP(25) { DEC(R_H); }					// DEC H
 OP(26) { R_H = FETCH(); }				// LD H,n
-OP(27) { DAA(R_A); }						// DAA
+OP(27) { DAA(); }						// DAA
 OP(28) { JR(ZF)		}					//JRZ PC+n
 OP(29) { ADDHL(R_HL); }					// ADD HL,HL
 OP(2A) { R_A = RD(R_HL);R_HL++; }			// [GB] LD A,(HL++)
