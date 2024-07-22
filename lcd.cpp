@@ -4,6 +4,7 @@
 int lcd_scale = 4;
 int lcd_fpslimit = 1;
 int lcd_effect = 1; // possible values: 0,1
+int lcd_border = 0;
 
 int screen_width, screen_height;
 static uint32_t* pbuf;
@@ -47,7 +48,7 @@ void sdl_win_init(int width, int height)
 	SDL_Window* window = SDL_CreateWindow(
 		title,
 		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-		screen_width * lcd_scale, screen_height * lcd_scale,
+		screen_width * lcd_scale + 2 * lcd_border * lcd_scale, screen_height * lcd_scale + 2 * lcd_border * lcd_scale,
 		0);
 
 	if (window == NULL) {
@@ -129,6 +130,12 @@ void sdl_win_blit()
 
 	Uint32* const pixels = (Uint32*)output_surface->pixels;
 
+	if (lcd_border != 0) {
+		for (int n = 0; n < output_surface->w * output_surface->h; n++) {
+			pixels[n] = dmg_pal[0];
+		}
+	}
+
 	for (int y = 0; y < h; y++)
 	{
 		for (int x = 0; x < w; x++)
@@ -137,7 +144,7 @@ void sdl_win_blit()
 
 			for (int s = 0; s < ScaleFactor; s++) {
 				for (int t = 0; t < ScaleFactor; t++) {
-					pixels[ScaleFactor * x + s + ((ScaleFactor * y + t) * output_surface->w)] = color;
+					pixels[ScaleFactor * (x + lcd_border) + s + ((ScaleFactor * (y + lcd_border) + t) * output_surface->w)] = color;
 				}
 			}
 		}
