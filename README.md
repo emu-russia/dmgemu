@@ -1,5 +1,9 @@
 # Nintendo GameBoy Emulator
 
+> [!NOTE]
+> At the moment we are thinking about how we can refactor all this mess of code from 20 years ago (and whether it is necessary), because the DMG-CPU chip is being analyzed in a neighboring repository. hurray! not even 25 years have passed :)
+> I would like to update this emulator to be clock-accurate and playable (with acceptable fps) at the same time. Edits will be made point by point until the source code is "bent" towards what we see inside the chip.
+
 This is original "black-and-white" GameBoy (DMG-01) emulator.
 It supports variety of mappers, boot from internal ROM and has nice-looking LCD effect.
 Compatibility is pretty high.
