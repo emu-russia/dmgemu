@@ -77,7 +77,7 @@ extern uint8_t hram[0x200];
 #define R_NR51  hram[0x100 + 0x25]
 #define R_NR52  hram[0x100 + 0x26]
 
-#define R_INTROM hram[0x100 + 0x50]
+#define R_BANK  hram[0x100 + 0x50]
 
 #define HRAM(addr) hram[0x100 + (addr & 0xff)]
 #define RANGE(x, a, b) ((x >= a) && (x <= b))

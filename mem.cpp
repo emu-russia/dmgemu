@@ -101,7 +101,7 @@ uint8_t mem_r8_TRAP(unsigned addr) {
 uint8_t mem_r8_emptyROM(unsigned addr){return 0x00; }
 uint8_t mem_r8_ROMbank0(unsigned addr)
 {
-	if (addr < 256 && R_INTROM == 0) return introm[addr];
+	if (addr < 256 && R_BANK == 0) return introm[addr];
 	else
 	{
 		if (cart.data == NULL) return 0xff;
@@ -323,7 +323,7 @@ uint8_t mem_r8_IO(unsigned addr) {
 		switch(addr & 0xff) {
 		case 0x00 : 
 			{
-				uint8_t pad;
+				uint8_t pad = 0;
 				if(R_PAD & 0x20) pad = pad_lo();
 				if(R_PAD & 0x10) pad = pad_hi();
 				return ~pad & 0xf;
@@ -334,7 +334,9 @@ uint8_t mem_r8_IO(unsigned addr) {
 			if(R_TAC&4)
 				return (uint8_t)((gb_clk>>gb_timshift)+gb_timbase); // current value
 			// otherwise old(frozen) value will be returned
-		break;
+			break;
+		case 0x50:
+			return R_BANK & 1;
 		}
 	}
 	return hram[addr & 0x1ff];
@@ -388,20 +390,6 @@ void mem_w8_IO(unsigned addr, uint8_t data) {
 			R_IE = data;
 			sm83_check4int();
 		return;
-		/*case 0x10: case 0x11: case 0x12: case 0x13:
-		case 0x14: case 0x15: case 0x16: case 0x17:
-		case 0x18: case 0x19: case 0x1A: case 0x1B:
-		case 0x1C: case 0x1D: case 0x1E: case 0x1F:
-		case 0x20: case 0x21: case 0x22: case 0x23:
-		case 0x24: case 0x25: case 0x26: case 0x27:
-		case 0x28: case 0x29: case 0x2A: case 0x2B:
-		case 0x2C: case 0x2D: case 0x2E: case 0x2F:
-		case 0x30: case 0x31: case 0x32: case 0x33:
-		case 0x34: case 0x35: case 0x36: case 0x37:
-		case 0x38: case 0x39: case 0x3A: case 0x3B:
-		case 0x3C: case 0x3D: case 0x3E: case 0x3F:
-			so_write((uint8_t)(addr & 0xff), data);
-		return;*/
 		//case 0x41: // STAT
 		  //  R_STAT = (R_STAT &7)|(data&0xF8);
 						//check4LCDint();
@@ -427,6 +415,9 @@ void mem_w8_IO(unsigned addr, uint8_t data) {
 			break;
 		case 0x49: // OBP1
 			CONVPAL(OBP1,data);
+			break;
+		case 0x50: // BANK
+			R_BANK |= (data & 1);		// Write 1 only
 			break;
 		}
 	}

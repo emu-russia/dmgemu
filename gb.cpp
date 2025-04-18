@@ -15,7 +15,7 @@ void gb_init()
 	ppu_init();
 	apu_init(44100);
 	if (skip_introm) {
-		R_INTROM = 1;
+		R_BANK = 1;
 		R_PC = 0x100;
 	}
 	__log("init OK.");
