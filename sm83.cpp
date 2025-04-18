@@ -855,12 +855,13 @@ OP(FF) { RST(0x38); }					// RST 38h
 
 // **********************************************************************
 
+// This makes code more readable, editable & compressable :)
 static void filltables(void) {
 	unsigned i,p;
 	for(i=0;i<256;i++) {
 		swap_t[i] = (uint8_t)((i<<4)|(i>>4));
 		p = 0;
-		if(!i) p|=ZF;
+		if(i==0) p|=ZF;
 		zr_t[i]=p;
 		inc_t[i] = (i&0xF)==0x0?  (p|HF)  : p;
 		p|=NF;
@@ -869,7 +870,7 @@ static void filltables(void) {
 }
 void sm83_init()
 {
-	filltables();  // This makes code more readable, editable & compressable :)
+	filltables();
 	R_PC = 0;
 	HALT = IME = 0;
 }
