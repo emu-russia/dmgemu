@@ -26,6 +26,7 @@ add_executable (dmgemu
 	ppu.cpp
 	sm83.cpp
 	sound.cpp
+	cart.cpp
 )
 
 target_link_libraries (dmgemu LINK_PUBLIC SDL2)

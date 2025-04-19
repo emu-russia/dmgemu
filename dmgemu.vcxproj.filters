@@ -53,6 +53,9 @@
     <ClCompile Include="perftimer_linux.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="cart.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gb.h">
@@ -89,6 +92,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="lcd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cart.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

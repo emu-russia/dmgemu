@@ -176,6 +176,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="cart.cpp" />
     <ClCompile Include="gb.cpp" />
     <ClCompile Include="lcd.cpp" />
     <ClCompile Include="perftimer_linux.cpp">
@@ -202,6 +203,7 @@
     <ClCompile Include="sound.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="cart.h" />
     <ClInclude Include="gb.h" />
     <ClInclude Include="introm.h" />
     <ClInclude Include="lcd.h" />
