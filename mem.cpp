@@ -13,9 +13,6 @@ uint8_t ram[0x2000];
 /* high memory, OAM and hardware registers ($FE00-$FFFF) */
 uint8_t hram[0x200];
 
-extern mem_Read8P   mem_r8 [128];
-extern mem_Write8P  mem_w8 [128];
-
 /***********************************************************************
 	memory handlers control
 ***********************************************************************/
@@ -375,18 +372,14 @@ static void mem_InitGeneric(void) {
 	MEMMAP_W(0xFE00,0x10000,mem_w8_IO);  // map IO area
 	MEMMAP_R(0xFE00,0x10000,mem_r8_IO);  
 
-	//MEMMAP_R(0xA000,0xC000,mem_r8_emptyROM);
 	MEMMAP_W(0xA000,0xC000,mem_w8_NULL); // RAM is not connected
 
 	MEMMAP_W(0x0000,0x8000,mem_w8_NULL); //
 	
-
-	//if((n=cart.rom_size)>0x8000) n = 0x8000;
 	MEMMAP_R(0x0000,0x4000,mem_r8_ROMbank0); // map up to 32 kb of ROM at start
-	if(cart.rom_size>0x4000)
+	if (cart.rom_size > 0x4000) {
 		MAPROM(mem_r8_ROMbank1);
-		//MEMMAP_R(0xA000,0xA000+n,mem_r8_emptyROM); // RAM is disabled by default
-	//MEMMAP_R(0xA000,0xA000+n,mem_r8_RAMbank); // map up to 8 kb of RAM at start
+	}
 }
 
 /**********************************************************************
