@@ -91,6 +91,7 @@ void check_ROM_header()
 		return;
 	}
 	romhdr = (rom_header_t*)(cart.data + 0x100);
+	printf("MBC type: %d, romsize: %d, ramsize: %d\n", romhdr->type, romhdr->romsize, romhdr->ramsize);
 	if (!findsz(&(cart.rom_size), ROM_SIZES, romhdr->romsize))
 		sys_error("Unknown ROM size");
 	if (!findsz(&(cart.ram_size), RAM_SIZES, romhdr->ramsize))

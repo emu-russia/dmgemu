@@ -60,39 +60,39 @@ void show_regs()
 	char buf[0x1000]{};
 	int i, p = 0;
 
-	p += sprintf(&buf[p], "AF=%.4X\t\tBC=%.4X\t\tDE=%.4X\nHL=%.4X\n", R_AF, R_BC, R_DE, R_HL);
-	p += sprintf(&buf[p], "SP=%.4X\t\tPC=%.4X\t\tCLK=%d\n\n", R_SP, R_PC, (int)gb_clk);
+	p += sprintf(&buf[p], "AF=%04X  BC=%04X   DE=%04X   HL=%04X\n", R_AF, R_BC, R_DE, R_HL);
+	p += sprintf(&buf[p], "SP=%04X  PC=%04X   CLK=%d\n\n", R_SP, R_PC, (int)gb_clk);
 
-	p += sprintf(&buf[p], "P1=%.2X\t\tTIMA=%.2X\t\tIF=%.2X\n", HRAM(0xff00), HRAM(0xff05), HRAM(0xff0f));
-	p += sprintf(&buf[p], "SB=%.2X\t\tTMA=%.2X\t\tIE=%.2X\n", HRAM(0xff01), HRAM(0xff06), HRAM(0xffff));
-	p += sprintf(&buf[p], "SC=%.2X\t\tTAC=%.2X\n", HRAM(0xff02), HRAM(0xff07));
-	p += sprintf(&buf[p], "DIV=%.2X\n\n", HRAM(0xff04));
+	p += sprintf(&buf[p], "P1=%02X\t\tTIMA=%02X\t\tIF=%02X\n", HRAM(0xff00), HRAM(0xff05), HRAM(0xff0f));
+	p += sprintf(&buf[p], "SB=%02X\t\tTMA=%02X\t\tIE=%02X\n", HRAM(0xff01), HRAM(0xff06), HRAM(0xffff));
+	p += sprintf(&buf[p], "SC=%02X\t\tTAC=%02X\n", HRAM(0xff02), HRAM(0xff07));
+	p += sprintf(&buf[p], "DIV=%02X\n\n", HRAM(0xff04));
 
-	p += sprintf(&buf[p], "NR10=%.2X\t\tNR21=%.2X\t\tNR30=%.2X\n", HRAM(0xff10), HRAM(0xff16), HRAM(0xff1a));
-	p += sprintf(&buf[p], "NR11=%.2X\t\tNR22=%.2X\t\tNR31=%.2X\n", HRAM(0xff11), HRAM(0xff17), HRAM(0xff1b));
-	p += sprintf(&buf[p], "NR12=%.2X\t\tNR23=%.2X\t\tNR32=%.2X\n", HRAM(0xff12), HRAM(0xff18), HRAM(0xff1c));
-	p += sprintf(&buf[p], "NR13=%.2X\t\tNR24=%.2X\t\tNR33=%.2X\n", HRAM(0xff13), HRAM(0xff19), HRAM(0xff1d));
-	p += sprintf(&buf[p], "NR14=%.2X\t\t\t\tNR34=%.2X\n\n", HRAM(0xff14), HRAM(0xff1e));
+	p += sprintf(&buf[p], "NR10=%02X\t\tNR21=%02X\t\tNR30=%02X\n", HRAM(0xff10), HRAM(0xff16), HRAM(0xff1a));
+	p += sprintf(&buf[p], "NR11=%02X\t\tNR22=%02X\t\tNR31=%02X\n", HRAM(0xff11), HRAM(0xff17), HRAM(0xff1b));
+	p += sprintf(&buf[p], "NR12=%02X\t\tNR23=%02X\t\tNR32=%02X\n", HRAM(0xff12), HRAM(0xff18), HRAM(0xff1c));
+	p += sprintf(&buf[p], "NR13=%02X\t\tNR24=%02X\t\tNR33=%02X\n", HRAM(0xff13), HRAM(0xff19), HRAM(0xff1d));
+	p += sprintf(&buf[p], "NR14=%02X\t\t\t\tNR34=%02X\n\n", HRAM(0xff14), HRAM(0xff1e));
 
-	p += sprintf(&buf[p], "NR41=%.2X\t\tNR50=%.2X\n", HRAM(0xff20), HRAM(0xff24));
-	p += sprintf(&buf[p], "NR42=%.2X\t\tNR51=%.2X\n", HRAM(0xff21), HRAM(0xff25));
-	p += sprintf(&buf[p], "NR43=%.2X\t\tNR52=%.2X\n", HRAM(0xff22), HRAM(0xff26));
-	p += sprintf(&buf[p], "NR40=%.2X\n\n", HRAM(0xff23));
+	p += sprintf(&buf[p], "NR41=%02X\t\tNR50=%02X\n", HRAM(0xff20), HRAM(0xff24));
+	p += sprintf(&buf[p], "NR42=%02X\t\tNR51=%02X\n", HRAM(0xff21), HRAM(0xff25));
+	p += sprintf(&buf[p], "NR43=%02X\t\tNR52=%02X\n", HRAM(0xff22), HRAM(0xff26));
+	p += sprintf(&buf[p], "NR40=%02X\n\n", HRAM(0xff23));
 
 	p += sprintf(&buf[p], "WAVE:\n");
 	for(i=0; i<16; i++)
-		p += sprintf(&buf[p], "%.2X ", HRAM(0xff30 + i));
+		p += sprintf(&buf[p], "%02X ", HRAM(0xff30 + i));
 	p += sprintf(&buf[p], "\n\n");
 
-	p += sprintf(&buf[p], "LCDC=%.2X\tLY=%.2X\t\tBGP=%.2X\n", HRAM(0xff40), HRAM(0xff44), HRAM(0xff47));
-	p += sprintf(&buf[p], "STAT=%.2X \tLYC=%.2X\t\tOBP0=%.2X\n", HRAM(0xff41), HRAM(0xff45), HRAM(0xff48));
-	p += sprintf(&buf[p], "SCX=%.2X\t\tWX=%.2X\t\tOBP1=%.2X\n", HRAM(0xff43), HRAM(0xff4b), HRAM(0xff49));
-	p += sprintf(&buf[p], "SCY=%.2X\t\tWY=%.2X\n", HRAM(0xff42), HRAM(0xff4a));
+	p += sprintf(&buf[p], "LCDC=%02X    LY=%02X    BGP=%02X\n", HRAM(0xff40), HRAM(0xff44), HRAM(0xff47));
+	p += sprintf(&buf[p], "STAT=%02X    LYC=%02X   OBP0=%02X\n", HRAM(0xff41), HRAM(0xff45), HRAM(0xff48));
+	p += sprintf(&buf[p], "SCX=%02X     WX=%02X    OBP1=%02X\n", HRAM(0xff43), HRAM(0xff4b), HRAM(0xff49));
+	p += sprintf(&buf[p], "SCY=%02X     WY=%02X\n", HRAM(0xff42), HRAM(0xff4a));
 
 #ifdef _WIN32
-	MessageBox(NULL, buf, "GB SM83 and hardware register map", MB_OK | MB_TOPMOST | MB_ICONINFORMATION);
+	MessageBox(NULL, buf, "SM83 Core and hardware registers dump", MB_OK | MB_TOPMOST | MB_ICONINFORMATION);
 #else
-	printf("GB SM83 and hardware register map: %s", buf);
+	printf("SM83 Core and hardware registers dump: %s", buf);
 #endif
 }
 
