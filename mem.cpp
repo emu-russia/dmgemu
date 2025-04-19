@@ -1,59 +1,11 @@
 /* GameBoy memory manager */
 #include "pch.h"
 
-#define Kbit *128
-#define Mbit *(128*1024)
-
-typedef struct SZstruct_ {
-	int n;
-	int sz;
-} SZstruct;
-
-static SZstruct ROM_SIZES[] = {
-{0,  256 Kbit},
-{1,  512 Kbit},
-{2,  1   Mbit},
-{3,  2   Mbit},
-{4,  4   Mbit},
-{5,  8   Mbit},
-{6,  16  Mbit},
-{7,  32  Mbit},
-{8,  64  Mbit},
-{52, 9   Mbit},
-{53, 10  Mbit},
-{54, 12  Mbit},
-{64, 20  Mbit},
-{65, 24  Mbit},
-{74, 36  Mbit},
-{75, 40  Mbit},
-{76, 48  Mbit},
-{-1,0}};
-
-static SZstruct RAM_SIZES[] = {
-{0,0   Kbit},
-{1,16  Kbit},
-{2,64  Kbit},
-{3,256 Kbit},
-{4,1   Mbit},
-{-1,0}};
-
-#define BANK_ENABLED 1
-
-struct Cartridge cart;
-
 mem_Read8P   mem_r8 [128];
 mem_Write8P  mem_w8 [128];
 
-/* ROM banks */
-//uint8_t *rom0, *rom1;
-//uint8_t trash[0x4000];
- 
 /* VRAM */
 uint8_t vram[0x2000];
-
-/* current RAM bank and enable flag */
-//uint8_t *ram_bank;
-//int ram_bank_enable;
 
 /* internal RAM ($C000-$DFFF) */
 uint8_t ram[0x2000];
@@ -64,30 +16,25 @@ uint8_t hram[0x200];
 extern mem_Read8P   mem_r8 [128];
 extern mem_Write8P  mem_w8 [128];
 
-//void (*memini[6])();
-
 /***********************************************************************
 	memory handlers control
 ***********************************************************************/
 
 
 // Map read memory range
-static void MemMapR(unsigned from,unsigned to,mem_Read8P p) {
+void MemMapR(unsigned from,unsigned to,mem_Read8P p) {
 	unsigned i;
 	for(i=from;i<to;i++) {
 		mem_r8[i]=p;
 	}
 }
 // Map write memory range
-static void MemMapW(unsigned from,unsigned to,mem_Write8P p) {
+void MemMapW(unsigned from,unsigned to,mem_Write8P p) {
 	unsigned i;
 	for(i=from;i<to;i++) {
 		mem_w8[i]=p;
 	}
 }
-#define MEMMAP_W(a,b,p) MemMapW((a)>>9,(b)>>9,p)
-#define MEMMAP_R(a,b,p) MemMapR((a)>>9,(b)>>9,p)
-
 
 
 /***********************************************************************
@@ -120,27 +67,18 @@ void mem_w8_TRAP(unsigned addr, uint8_t n) {
 void mem_w8_VRAM(unsigned addr, uint8_t n) {
 	addr &=0x1fff;vram[addr] = n; tilecache[addr>>4] = 0;
 }
-//void mem_w8_RAM(unsigned addr,uint8_t n) {ram[addr&0x1FFF]=n;}
 void mem_w8_RAM(unsigned addr, uint8_t n) {ram[addr&0x1FFF]=n;}
 void mem_w8_RAMbank(unsigned addr, uint8_t n) {cart.ram[0].ptr[addr&cart.ram_amask]=n;}
 void mem_w8_RAMbank4(unsigned addr, uint8_t n) {cart.ram[0].ptr[addr&0x1FF]=n;}
 
-#define MAPROM(x) MEMMAP_R(0x4000,0x8000,x);
-
-#define MAPRAM(r,w) {MEMMAP_R(0xA000,0xC000/*cart.ram_end*/,r);MEMMAP_W(0xA000,0xC000,w);}
-
-/*#define SETRAM(rb) if(rb>=cart.ram_nbanks) \
-			sys_error("RAM bank not present: [%X]",(rb));\
-			cart.ram[0].bank = rb;\
-		cart.ram[0].ptr = cart.ramdata+(rb)*0x4000;*/
-static void SETRAM(unsigned n) {
+void SETRAM(unsigned n) {
 	n&=cart.ram_nmask;
 	//if(n>=cart.ram_nbanks)
 		//sys_error("RAM bank not present: [%X]",n);
 	cart.ram[0].bank = n;
 	cart.ram[0].ptr = cart.ramdata+n*0x4000;
 }
-static void SETROM(unsigned n) {
+void SETROM(unsigned n) {
 	n&=cart.rom_nmask;
 	//if(n>=cart.rom_nbanks)
 //		sys_error("ROM bank not present: [%X]",(n));
@@ -150,165 +88,12 @@ static void SETROM(unsigned n) {
 // Check for 0 is performed for lower 5 bits, not for whole address
 
 
-//#define SETROM1(n) if(!(n)) (n)++; SETROM(n);
-/***********************************************************************
-	MBC1 support
-***********************************************************************/
-static struct MBC_ {
-	unsigned mode2;	// MBC1
-	unsigned ramenabled;  // All MBCs
-	unsigned clock_present; // MBC3
-	unsigned clock_latched; // MBC3
-} MBC;
-// mode1 - 32*4 pages of ROM, 1 page of RAM
-// mode2 - 32 pages of ROM, 1*4 pages of RAM
-
-void mem_w8_MBC1_RAMcontrol(unsigned addr, uint8_t n) {
-	if((n&0xF) == 0xA) {
-		if(!MBC.ramenabled) MAPRAM(mem_r8_RAMbank,mem_w8_RAMbank);
-		MBC.ramenabled = 1;
-	} else {
-		if(MBC.ramenabled) MAPRAM(mem_r8_emptyROM,mem_w8_NULL);
-		MBC.ramenabled = 0;
-	}
-}
-void mem_w8_MBC1_setROM(unsigned addr, uint8_t n) {
-	unsigned nn=n&0x1F; // 5 bits
-	if(!nn) nn++;
-	if(!MBC.mode2) nn|=cart.rom[1].bank&(3<<5);  //
-	SETROM(nn);
-}
-void mem_w8_MBC1_setROMorRAM(unsigned addr, uint8_t n) {
-	unsigned nn=(unsigned)n&3; // 2 bits
-	if(MBC.mode2) {
-		if(cart.ram_nbanks) SETRAM(nn);
-	} else {
-		nn=(nn<<5)+(cart.rom[1].bank&0x1F);  //
-		SETROM(nn);
-	}
-}
-void mem_w8_MBC1_mode(unsigned addr, uint8_t n) {
-	unsigned nn;
-	if(MBC.mode2 == (n&(unsigned)1)) return;
-	MBC.mode2 = n&(unsigned)1;
-	nn = cart.rom[1].bank&0x1F;
-	if(!nn) nn=1;
-	SETROM(nn);
-	if(cart.ram_nbanks) SETRAM(0);
-}
-
-static void InitMBC1_ROM(void) {
-	MEMMAP_W(0x2000,0x4000,mem_w8_MBC1_setROM);
-	MEMMAP_W(0x4000,0x6000,mem_w8_MBC1_setROMorRAM);
-	MEMMAP_W(0x6000,0x8000,mem_w8_MBC1_mode);
-	MAPROM(mem_r8_ROMbank1);
-	mem_w8_MBC1_mode(0,0);
-	MBC.ramenabled = 0;
-}
-
-static void InitMBC1_RAM(void) {
-	MEMMAP_W(0x0000,0x2000,mem_w8_MBC1_RAMcontrol);
-}
-
 /***********************************************************************
 	null MBC :) support
 ***********************************************************************/
 
 static void InitGenericRAM(void) {
 	MEMMAP_W(0x0000,0x2000,mem_w8_MBC1_RAMcontrol);
-}
-
-/***********************************************************************
-	MBC2 support
-***********************************************************************/
-
-
-// TODO: I don't know exactly how to map those 512x4 bits properly.
-void mem_w8_MBC2_set(unsigned addr, uint8_t n) {
-	unsigned nn=n&0xF;
-	if(addr&0x2100) {  // ROM control
-		if(!nn) nn=1;
-		SETROM(nn);
-	} else {		  // RAM control
-		if(nn == 0xA) {
-			if(!MBC.ramenabled) MAPRAM(mem_r8_RAMbank,mem_w8_RAMbank);
-			MBC.ramenabled = 1;
-		} else {
-			if(MBC.ramenabled) MAPRAM(mem_r8_emptyROM,mem_w8_NULL);
-			MBC.ramenabled = 0;
-		}
-	}
-}
-
-static void InitMBC2(void) {
-	MEMMAP_W(0x0000,0x4000,mem_w8_MBC2_set);
-	MAPROM(mem_r8_ROMbank1);
-	MAPRAM(mem_r8_emptyROM,mem_w8_NULL);
-	SETRAM(0);
-	MBC.ramenabled = 0;
-}
-
-/***********************************************************************
-	MBC3 support
-***********************************************************************/
-// TODO: no realtime clock support
-
-void mem_w8_MBC3_setROM(unsigned addr, uint8_t n) {
-	//register unsigned nn=n&0x7F; // 7 bits
-	//if(!MBC.mode2) nn|=cart.rom[1].bank&~0x1F;  //
-	if(!n) n = 1;
-	SETROM(n);
-}
-void mem_w8_MBC3_setRAM_or_clock(unsigned addr, uint8_t n) {
-	if(!(n&~3)) { // set RAM bank
-		if(cart.ram_nbanks) SETRAM(n);
-	} else {	// set RT clock register
-		
-	}
-}
-void mem_w8_MBC3_clocklatch(unsigned addr, uint8_t n) {
-	
-}
-
-static void InitMBC3_ROM(void) {
-	MEMMAP_W(0x2000,0x4000,mem_w8_MBC3_setROM);
-	MEMMAP_W(0x4000,0x6000,mem_w8_MBC3_setRAM_or_clock);
-	MEMMAP_W(0x6000,0x8000,mem_w8_MBC3_clocklatch);
-	MAPROM(mem_r8_ROMbank1);
-	MBC.ramenabled = 0;
-}
-
-static void InitMBC3_RAM(void) {
-	InitMBC1_RAM();
-}
-
-/***********************************************************************
-	MBC5 support
-***********************************************************************/
-
-void mem_w8_MBC5_setROM0(unsigned addr, uint8_t n) {
-	unsigned nn=(unsigned)n|(cart.rom[1].bank&0x100);
-	SETROM(nn);
-}
-void mem_w8_MBC5_setROM1(unsigned addr, uint8_t n) {
-	unsigned nn=((unsigned)n<<8)|(cart.rom[1].bank&0xFF);
-	SETROM(nn);
-}
-void mem_w8_MBC5_setRAM(unsigned addr, uint8_t n) {
-	SETRAM(n);
-}
-
-static void InitMBC5_ROM(void) {
-	MEMMAP_W(0x2000,0x3000,mem_w8_MBC5_setROM0);
-	MEMMAP_W(0x3000,0x4000,mem_w8_MBC5_setROM1);
-	MEMMAP_W(0x4000,0x6000,mem_w8_MBC5_setRAM);
-	//MEMMAP_W(0x6000,0x8000,mem_w8_MBC3_clocklatch);
-	MAPROM(mem_r8_ROMbank1);
-	MBC.ramenabled = 0;
-}
-
-static void InitMBC5_RAM(void) {
-	InitMBC1_RAM();
 }
 
 /**********************************************************************
@@ -341,12 +126,6 @@ uint8_t mem_r8_IO(unsigned addr) {
 	}
 	return hram[addr & 0x1ff];
 }
-
-#define CONVPAL(to,data) \
-	to[0] = (data >> (0 << 1)) & 3;\
-	to[1] = (data >> (1 << 1)) & 3;\
-	to[2] = (data >> (2 << 1)) & 3;\
-	to[3] = (data >> (3 << 1)) & 3;
 
 
 static const uint8_t timshift[4]={8,2,4,6};
@@ -430,73 +209,6 @@ void mem_w8_IO(unsigned addr, uint8_t data) {
 	memory initialization
 *************************************************************************
 */
-
-rom_header_t *romhdr;
-
-static void do_header_chk(int fire)
-{
-	uint8_t *buf = (uint8_t *)romhdr->title;
-	int chk = 0;
-	int i;
-
-	for(i=0; i<25; i++)
-		chk += buf[i];
-
-	chk = 0x100 - (chk + 25);
-
-	if(fire && romhdr->header_chk != (uint8_t)chk)
-		sys_error("header checksum failed!");
-}
-
-/*static void do_global_chk(int fire)
-{
-	long i;
-	register u_long chk = 0;
-
-	for(i=0; i<rom_size; i++)
-	{
-		if(i != 0x14e && i != 0x14f)
-			chk += game[i];
-	}
-
-	chk &= 0xffff;
-	chk = (chk << 8) | (chk >> 8);
-
-	if(fire && romhdr->global_chk != (uint16_t)chk)
-		sys_error("global checksum failed!");
-}*/
-
-
-static int findsz(unsigned *sz,SZstruct *from,int what) {
-	 while(2*2 == 4) {
-		if(from->n == -1) return 0;
-		if(from->n == what) {
-			*sz = from->sz;
-			return -1;
-		}
-		from++;
-	};
-}
-
-static void check_ROM_header()
-{
-	if (cart.data == NULL)
-	{
-		static rom_header_t empty;
-		romhdr = &empty;
-		empty.type = 0;
-		strcpy(cart.title,"NO CARD");
-		return;
-	}
-	romhdr = (rom_header_t *)(cart.data+0x100);
-	if(!findsz(&(cart.rom_size),ROM_SIZES,romhdr->romsize))
-		sys_error("Unknown ROM size");
-	if(!findsz(&(cart.ram_size),RAM_SIZES,romhdr->ramsize))
-		sys_error("Unknown RAM size");
-	do_header_chk(0);
-	memcpy(cart.title,romhdr->title,15);
-//    do_global_chk(1);
-}
 
 /* only for DEBUG */
 static void dump_internal_RAM()

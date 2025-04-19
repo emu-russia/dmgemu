@@ -26,6 +26,7 @@
 
 /* project includes */
 #include "misc.h"
+#include "cart.h"
 #include "mem.h"
 #include "sm83.h"
 #include "ppu.h"

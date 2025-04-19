@@ -1,34 +1,13 @@
 #pragma once
 
-/* ROM header */
-typedef struct {
-	uint8_t		code[4];
-	uint16_t    logo[24];
-	char		title[16];
-	char		rsrv[3];
-	uint8_t		type, romsize, ramsize;
-	uint8_t		country, licensee;
-	uint8_t		version;
-	uint8_t		header_chk;
-	uint16_t	global_chk;
-} rom_header_t;
-
-extern rom_header_t *romhdr;
+struct SZstruct {
+	int n;
+	int sz;
+};
 
 extern uint8_t vram[0x2000];
 
 extern uint8_t hram[0x200];
-
-
-// Gameboy Color palettes
-#define R_BCPS hram[0x100 + 0x68]
-// BG palette index (0-0x1F)
-#define R_BCPD hram[0x100 + 0x69]
-// BG palette data
-#define R_OCPS hram[0x100 + 0x6A]
-// OBJ palette index (0-0x1F)
-#define R_OCPD hram[0x100 + 0x6B]
-// OBJ palette data
 
 
 #define R_PAD   hram[0x100 + 0x00]
@@ -82,32 +61,6 @@ extern uint8_t hram[0x200];
 #define HRAM(addr) hram[0x100 + (addr & 0xff)]
 #define RANGE(x, a, b) ((x >= a) && (x <= b))
 
-struct MemBank {
-	unsigned flags;
-	unsigned bank;
-	uint8_t*ptr;
-	unsigned z0;
-};
-
-extern struct Cartridge {
-	uint8_t*data; // ROM data
-	uint8_t*romdata; // ROM data
-	uint8_t*ramdata; // RAM data
-	unsigned rom_size;	// Size of ROM in bytes
-	unsigned ram_size;  // Size of RAM in bytes
-	unsigned rom_nbanks;   // Size of ROM in banks (mapper dependent)
-	unsigned ram_nbanks;   // Size of RAM in banks (mapper dependent)
-	unsigned rom_nmask;	   // Mask for ROM bank selection
-	unsigned ram_nmask;  // Mask for RAM bank selection
-	unsigned ram_end;	   // End address for usable RAM area in CPU address space
-	unsigned ram_amask;	   // Mask for allowed RAM bank space 
-
-	struct MemBank rom[4]; // selected ROM bank(s)
-	struct MemBank ram[4]; // selected RAM bank(s)
-
-	char title[20];
-} cart;
-
 void mem_init();
 void mem_shutdown();
 
@@ -122,9 +75,24 @@ typedef mem_Write8 *mem_Write8P;
 
 extern mem_Read8P   mem_r8 [128];
 extern mem_Write8P  mem_w8 [128];
-//extern mem_read16P  mem_r16[128];
-//extern mem_write16P mem_w16[128];
 
+void MemMapR(unsigned from, unsigned to, mem_Read8P p);
+void MemMapW(unsigned from, unsigned to, mem_Write8P p);
+
+
+#define MEMMAP_W(a,b,p) MemMapW((a)>>9,(b)>>9,p)
+#define MEMMAP_R(a,b,p) MemMapR((a)>>9,(b)>>9,p)
+#define MAPROM(x) MEMMAP_R(0x4000,0x8000,x);
+#define MAPRAM(r,w) {MEMMAP_R(0xA000,0xC000/*cart.ram_end*/,r);MEMMAP_W(0xA000,0xC000,w);}
+
+void SETRAM(unsigned n);
+void SETROM(unsigned n);
+
+uint8_t mem_r8_emptyROM(unsigned addr);
+uint8_t mem_r8_ROMbank1(unsigned addr);
+uint8_t mem_r8_RAMbank(unsigned addr);
+void mem_w8_RAMbank(unsigned addr, uint8_t n);
+void mem_w8_NULL(unsigned addr, uint8_t n);
 
 // There is no checks for allowed read.
 
