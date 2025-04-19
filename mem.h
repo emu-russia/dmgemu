@@ -86,9 +86,10 @@ void MemMapW(unsigned from, unsigned to, mem_Write8P p);
 #define MAPRAM(r,w) {MEMMAP_R(0xA000,0xC000/*cart.ram_end*/,r);MEMMAP_W(0xA000,0xC000,w);}
 
 void SETRAM(unsigned n);
-void SETROM(unsigned n);
+void SETROM(unsigned i, unsigned n);
 
 uint8_t mem_r8_emptyROM(unsigned addr);
+uint8_t mem_r8_emptyRAM(unsigned addr);
 uint8_t mem_r8_ROMbank1(unsigned addr);
 uint8_t mem_r8_RAMbank(unsigned addr);
 void mem_w8_RAMbank(unsigned addr, uint8_t n);

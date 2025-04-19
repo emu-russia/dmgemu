@@ -42,8 +42,8 @@ uint8_t mem_r8_TRAP(unsigned addr) {
 	sys_error("Trap on memory read, [%X]",(unsigned)addr);
 	return 0xFF;
 }
-uint8_t mem_r8_emptyROM(unsigned addr){return 0x00; }
-uint8_t mem_r8_emptyRAM(unsigned addr) { return 0xFF; }
+uint8_t mem_r8_emptyROM(unsigned addr){return 0xFF; }
+uint8_t mem_r8_emptyRAM(unsigned addr){ return 0xFF; }
 uint8_t mem_r8_ROMbank0(unsigned addr)
 {
 	if (addr < 256 && R_BANK == 0) return introm[addr];
@@ -85,12 +85,12 @@ void SETRAM(unsigned n) {
 	cart.ram.bank = n;
 	cart.ram.ptr = cart.ramdata+n*0x2000;
 }
-void SETROM(unsigned n) {
+void SETROM(unsigned i, unsigned n) {
 	n&=cart.rom_nmask;
 	//if(n>=cart.rom_nbanks)
 //		sys_error("ROM bank not present: [%X]",(n));
-	cart.rom[1].bank = (n);
-	cart.rom[1].ptr = cart.romdata+n*0x4000;
+	cart.rom[i].bank = (n);
+	cart.rom[i].ptr = cart.romdata+n*0x4000;
 }
 // Check for 0 is performed for lower 5 bits, not for whole address
 
@@ -336,7 +336,7 @@ static void mem_InitGeneric(void) {
 	for(n = 1;n<cart.rom_nbanks;n<<=1);
 	cart.rom_nmask = n-1;
 	cart.rom[0].ptr = cart.romdata;
-	SETROM(1);
+	SETROM(1, 1);
 	if(cart.ram_size) {
 		cart.ram_nbanks = (cart.ram_size+0x1FFF)>>13;
 		cart.ram_end= 0xC000; // ram_end is obsolete, whole range is mapped always fo compatibility reasons (ram_amask used instead)
