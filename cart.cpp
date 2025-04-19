@@ -70,7 +70,7 @@ static void do_header_chk(int fire)
 
 
 static int findsz(unsigned* sz, SZstruct* from, int what) {
-	while (2 * 2 == 4) {
+	while (1) {
 		if (from->n == -1) return 0;
 		if (from->n == what) {
 			*sz = from->sz;

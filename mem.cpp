@@ -1,8 +1,8 @@
 /* GameBoy memory manager */
 #include "pch.h"
 
-mem_Read8P   mem_r8 [128];
-mem_Write8P  mem_w8 [128];
+mem_Read8P   mem_r8 [256];
+mem_Write8P  mem_w8 [256];
 
 /* VRAM */
 uint8_t vram[0x2000];
@@ -387,11 +387,11 @@ static void mem_InitGeneric(void) {
 **********************************************************************/
 uint16_t mem_read16 (unsigned addr) {
 	return (uint16_t)(
-	(unsigned)mem_r8[addr>>9](addr)+
-	((unsigned)mem_r8[(addr+1)>>9](addr+1)<<8));
+	(unsigned)mem_r8[addr>>8](addr)+
+	((unsigned)mem_r8[(addr+1)>>8](addr+1)<<8));
 }
 void mem_write16 (unsigned addr,unsigned d) {
-	mem_w8[addr>>9](addr,(uint8_t)d);
+	mem_w8[addr>>8](addr,(uint8_t)d);
 	addr++;
-	mem_w8[addr>>9](addr,(uint8_t)(d>>8));
+	mem_w8[addr>>8](addr,(uint8_t)(d>>8));
 }

@@ -73,15 +73,15 @@ typedef void (mem_Write8)(unsigned, uint8_t);
 typedef mem_Read8 *mem_Read8P;
 typedef mem_Write8 *mem_Write8P;
 
-extern mem_Read8P   mem_r8 [128];
-extern mem_Write8P  mem_w8 [128];
+extern mem_Read8P   mem_r8 [256];
+extern mem_Write8P  mem_w8 [256];
 
 void MemMapR(unsigned from, unsigned to, mem_Read8P p);
 void MemMapW(unsigned from, unsigned to, mem_Write8P p);
 
 
-#define MEMMAP_W(a,b,p) MemMapW((a)>>9,(b)>>9,p)
-#define MEMMAP_R(a,b,p) MemMapR((a)>>9,(b)>>9,p)
+#define MEMMAP_W(a,b,p) MemMapW((a)>>8,(b)>>8,p)
+#define MEMMAP_R(a,b,p) MemMapR((a)>>8,(b)>>8,p)
 #define MAPROM(x) MEMMAP_R(0x4000,0x8000,x);
 #define MAPRAM(r,w) {MEMMAP_R(0xA000,0xC000/*cart.ram_end*/,r);MEMMAP_W(0xA000,0xC000,w);}
 
@@ -96,9 +96,9 @@ void mem_w8_NULL(unsigned addr, uint8_t n);
 
 // There is no checks for allowed read.
 
-#define RD(n) mem_r8[(unsigned)(n)>>9]((unsigned)(n))
-//#define WR(n, d) {unsigned t=n;byte dd=d;if(debug_canwrite) mem_w8[(unsigned)(t)>>9]((unsigned)(t),dd);}
-#define WR(n, d) mem_w8[(unsigned)(n)>>9]((unsigned)(n),(uint8_t)(d));
+#define RD(n) mem_r8[(unsigned)(n)>>8]((unsigned)(n))
+//#define WR(n, d) {unsigned t=n;byte dd=d;if(debug_canwrite) mem_w8[(unsigned)(t)>>8]((unsigned)(t),dd);}
+#define WR(n, d) mem_w8[(unsigned)(n)>>8]((unsigned)(n),(uint8_t)(d));
 
 #define RD16(n) mem_read16(n)
 //#define WR16(n, d) {unsigned t=n;word dd=d;if(debug_canwrite) mem_write16(t,dd);}
