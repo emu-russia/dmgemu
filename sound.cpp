@@ -64,17 +64,22 @@ void FreeSound(void)
 {
 	SDL_CloseAudioDevice(dev_id);
 	SDL_QuitSubSystem(SDL_INIT_AUDIO);
-	delete[] SampleBuf;
+	if (SampleBuf != nullptr) {
+		delete[] SampleBuf;
+		SampleBuf = nullptr;
+	}
 }
 
 void pop_sample(int l, int r)
 {
-	SampleBuf[WAV_CHANNELS * SampleBuf_WrPtr] = l;
-	SampleBuf[WAV_CHANNELS * SampleBuf_WrPtr + 1] = r;
-	SampleBuf_WrPtr++;
+	if (SampleBuf != nullptr) {
+		SampleBuf[WAV_CHANNELS * SampleBuf_WrPtr] = l;
+		SampleBuf[WAV_CHANNELS * SampleBuf_WrPtr + 1] = r;
+		SampleBuf_WrPtr++;
 
-	if (SampleBuf_WrPtr >= SampleBuf_Size)
-	{
-		SampleBuf_WrPtr = 0;
+		if (SampleBuf_WrPtr >= SampleBuf_Size)
+		{
+			SampleBuf_WrPtr = 0;
+		}
 	}
 }
