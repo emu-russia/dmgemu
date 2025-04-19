@@ -98,7 +98,6 @@ void ppu_enumsprites()
 	unsigned h = ((R_LCDC & 4)<<1)+8;// ? (16) : (8); sprite height
 	unsigned line = (unsigned)(R_LY)+16;
 	unsigned i,j,ntosort;
-	register uint32_t tmp;
 	num_sprites = 0;
 
 	
@@ -116,9 +115,9 @@ void ppu_enumsprites()
 		for(i=0;i<ntosort;i++) {
 			for(j=i+1;j<num_sprites;j++)
 				if(used_spr[i].x>used_spr[j].x) {
-					tmp=((uint32_t*)used_spr)[i];
-					((uint32_t*)used_spr)[i] = ((uint32_t*)used_spr)[j];
-					((uint32_t*)used_spr)[j] = tmp;
+					SPR tmp = used_spr[i];
+					used_spr[i] = used_spr[j];
+					used_spr[j] = tmp;
 				}
 		}
 		if(num_sprites>10) num_sprites = 10;
