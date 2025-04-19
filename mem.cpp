@@ -217,22 +217,6 @@ void mem_w8_IO(unsigned addr, uint8_t data) {
 *************************************************************************
 */
 
-/* only for DEBUG */
-static void dump_internal_RAM()
-{
-#if 0
-	FILE *f;
-
-	f = fopen("RAM.bin", "wb");
-	fwrite(ram, 1, sizeof(ram), f);
-	fclose(f);
-
-	f = fopen("HRAM.bin", "wb");
-	fwrite(hram, 1, sizeof(hram), f);
-	fclose(f);
-#endif
-}
-
 /* fill zeroed/random data */
 static void init_internal_RAM(int how)
 {
@@ -256,8 +240,6 @@ static void init_internal_RAM(int how)
 	}
 
 	memset(hram, 0, sizeof(hram));
-
-	//dump_internal_RAM();
 }
 
 static void mem_InitGeneric(void);

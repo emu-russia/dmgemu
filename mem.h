@@ -97,9 +97,7 @@ void mem_w8_NULL(unsigned addr, uint8_t n);
 // There is no checks for allowed read.
 
 #define RD(n) mem_r8[(unsigned)(n)>>8]((unsigned)(n))
-//#define WR(n, d) {unsigned t=n;byte dd=d;if(debug_canwrite) mem_w8[(unsigned)(t)>>8]((unsigned)(t),dd);}
 #define WR(n, d) mem_w8[(unsigned)(n)>>8]((unsigned)(n),(uint8_t)(d));
 
 #define RD16(n) mem_read16(n)
-//#define WR16(n, d) {unsigned t=n;word dd=d;if(debug_canwrite) mem_write16(t,dd);}
 #define WR16(n, d) mem_write16(n,d)
