@@ -103,5 +103,3 @@ void mem_w8_NULL(unsigned addr, uint8_t n);
 #define RD16(n) mem_read16(n)
 //#define WR16(n, d) {unsigned t=n;word dd=d;if(debug_canwrite) mem_write16(t,dd);}
 #define WR16(n, d) mem_write16(n,d)
-
-
