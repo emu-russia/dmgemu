@@ -19,7 +19,6 @@ struct MemBank {
 	unsigned flags;
 	unsigned bank;
 	uint8_t* ptr;
-	unsigned z0;
 };
 
 struct Cartridge {
@@ -36,7 +35,7 @@ struct Cartridge {
 	unsigned ram_amask;	   // Mask for allowed RAM bank space 
 
 	MemBank rom[4]; // selected ROM bank(s)
-	MemBank ram[4]; // selected RAM bank(s)
+	MemBank ram; // selected RAM bank
 
 	char title[20];
 };

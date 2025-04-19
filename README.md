@@ -17,7 +17,7 @@ Controls:
 - Z: B
 - X: A
 - Enter: press all buttons at once (to do game save or reset etc.)
-- F8: Switch frame limiter on/off
+- F8: Switch frame limiter on/off (Limited to 1000 FPS)
 - F9: Switch LCD effect on/off
 - F12: Turn sound on/off
 

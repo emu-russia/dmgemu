@@ -265,25 +265,23 @@ in theory, interrupts must be checked:
 **********************************************************************/
 
 
-// TODO: optimize code fetch!!!!!!
-
 static uint8_t fetch(void) {
 	unsigned n=R_PC;
 	R_PC++;
-	return mem_r8[n>>9](n);
+	return RD(n);
 }
 
 static uint16_t fetch16(void) {
 	unsigned n=R_PC;
 	R_PC+=2;
-	return mem_r8[n>>9](n)+(mem_r8[(n+1)>>9](n+1)<<8);
+	return RD16(n);
 }
 
 #define FETCH fetch
 #define FETCH16 fetch16
 
-#define JR(a) if(R_F & (a)) R_PC += (signed char)FETCH(); else {R_PC++; z80_clk--; }
-#define JRN(a) if(!(R_F & (a))) R_PC += (signed char)FETCH(); else {R_PC++; z80_clk--; }
+#define JR(a) if(R_F & (a)) R_PC += (signed char)FETCH(); else {R_PC++; core_clk--; }
+#define JRN(a) if(!(R_F & (a))) R_PC += (signed char)FETCH(); else {R_PC++; core_clk--; }
 
 
 
@@ -303,9 +301,9 @@ unsigned tmp32;
 if(HALT) {gb_clk=clk_nextevent;return;}//clkmax;}
 while(gb_clk<clk_nextevent) {
 		register unsigned opcode;
-		unsigned z80_clk;
+		unsigned core_clk;
 		opcode = FETCH();
-		z80_clk = base_clk_t[opcode];
+		core_clk = base_clk_t[opcode];
 		switch(opcode) {
 case 00: {}    // NOP
 OP(01) { R_BC = FETCH16();}// LD BC,nn
@@ -504,22 +502,22 @@ OP(BC) { CP(R_H); }						// CP A,H
 OP(BD) { CP(R_L); }						// CP A,L
 OP(BE) { tmp8 = RD(R_HL); CP(tmp8); }	// CP A,(HL)
 OP(BF) { CP(R_A); }						// CP A,A	flags like for 0
-OP(C0) { if(!(R_F & ZF))  goto opC9; else z80_clk -= 3; } // RETNZ
+OP(C0) { if(!(R_F & ZF))  goto opC9; else core_clk -= 3; } // RETNZ
 OP(C1) { POP(r_bc); }					// POP BC
-OP(C2) { if(!(R_F & ZF)) R_PC = FETCH16(); else {R_PC += 2; z80_clk--;} } // JPNZ nn
+OP(C2) { if(!(R_F & ZF)) R_PC = FETCH16(); else {R_PC += 2; core_clk--;} } // JPNZ nn
 OP(C3) { R_PC = FETCH16(); }			// JP nn
-OP(C4) { if(!(R_F & ZF))  goto opCD; else {R_PC += 2; z80_clk -= 3;} } // CALLNZ
+OP(C4) { if(!(R_F & ZF))  goto opCD; else {R_PC += 2; core_clk -= 3;} } // CALLNZ
 OP(C5) { PUSH(r_bc); }					// PUSH BC
 OP(C6) { tmp8 = FETCH(); ADD(tmp8); }	// ADD A,n
 OP(C7) { RST(0x00); }					// RST 0
-OP(C8) { if(R_F & ZF) goto opC9; else z80_clk -= 3; } // RETZ
+OP(C8) { if(R_F & ZF) goto opC9; else core_clk -= 3; } // RETZ
 OP(C9) 
 opC9:
 { POP(r_pc); }					// RET
-OP(CA) { if(R_F & ZF) R_PC = FETCH16(); else {R_PC += 2; z80_clk--;} } // JPZ nn
+OP(CA) { if(R_F & ZF) R_PC = FETCH16(); else {R_PC += 2; core_clk--;} } // JPZ nn
 OP(CB) ;
 	opcode=FETCH();
-	z80_clk = cb_clk_t[opcode]; // TODO:move +1 to table
+	core_clk = cb_clk_t[opcode]; // TODO:move +1 to table
 	switch(opcode) {
 
 case 00: { RLC(R_B); }		// RLC B
@@ -780,7 +778,7 @@ CB(FE) { MSET(7, R_HL); }
 CB(FF) { SET(7, R_A); }
 break;
 }   /* select CB table */
-OP(CC) { if(R_F & ZF) goto opCD; else {R_PC += 2; z80_clk -= 3;} } // CALLZ
+OP(CC) { if(R_F & ZF) goto opCD; else {R_PC += 2; core_clk -= 3;} } // CALLZ
 OP(CD) 
 opCD:
 { tmp32 = FETCH16();///RD16(R_PC);R_PC+=2;
@@ -788,21 +786,21 @@ PUSH(r_pc);
 R_PC = (uint16_t)tmp32; }		// CALL
 OP(CE) { tmp8 = FETCH(); ADC(tmp8); }		// ADC A,n
 OP(cf) { RST(0x08); }						// RST 8
-OP(D0) { if(!(R_F & CF)) goto opC9; else z80_clk -= 3; } // RETNC
+OP(D0) { if(!(R_F & CF)) goto opC9; else core_clk -= 3; } // RETNC
 OP(D1) { POP(r_de); }
-OP(D2) { if(!(R_F & CF)) R_PC = FETCH16(); else {R_PC += 2; z80_clk--;} }
+OP(D2) { if(!(R_F & CF)) R_PC = FETCH16(); else {R_PC += 2; core_clk--;} }
 OP(D3) {Undefined();}			// [SM83] NOT implemented
-OP(D4) { if(!(R_F & CF)) goto opCD; else {R_PC += 2; z80_clk -= 3;} }
+OP(D4) { if(!(R_F & CF)) goto opCD; else {R_PC += 2; core_clk -= 3;} }
 OP(D5) { PUSH(r_de); }					// PUSH DE
 OP(D6) { tmp8 = FETCH(); SUB(tmp8); }	// SUB A,n
 OP(D7) { RST(0x10); }					// RST 10h
-OP(D8) { if(R_F & CF) goto opC9; else z80_clk -= 3; } // RETC
+OP(D8) { if(R_F & CF) goto opC9; else core_clk -= 3; } // RETC
 OP(D9) { POP(r_pc); IME = INT_ALL;
 sm83_check4int();
 }			// [SM83]	IRET
-OP(DA) { if(R_F & CF) R_PC = FETCH16(); else {R_PC += 2; z80_clk--;} } // JPC nn
+OP(DA) { if(R_F & CF) R_PC = FETCH16(); else {R_PC += 2; core_clk--;} } // JPC nn
 OP(DB) {Undefined();}			// [SM83] not implemented
-OP(DC) { if(R_F & CF) goto opCD; else {R_PC += 2; z80_clk -= 3;} } // CALLC
+OP(DC) { if(R_F & CF) goto opCD; else {R_PC += 2; core_clk -= 3;} } // CALLC
 OP(DD) {Undefined();}			// [SM83] not implemented
 OP(DE) { tmp8 = FETCH(); SBC(tmp8); }	// SBC A,n
 OP(DF) { RST(0x18); }					// RST 18h
@@ -844,8 +842,8 @@ OP(FE) { tmp8 = FETCH(); CP(tmp8); }	// CP A,n
 OP(FF) { RST(0x38); }					// RST 38h
 			break;
 		}
-		gb_clk+=z80_clk;	// Increment core clock counter
-		//so_clk+=z80_clk;	// Increment sound clock counter
+		gb_clk+= core_clk;	// Increment core clock counter
+		//so_clk+=core_clk;	// Increment sound clock counter
 /* TODO: both counters can be same, if wrapping for internal sound counters is moved
 		 to gb.c. As result one slow memory->memory addition will be removed
 */

@@ -70,7 +70,7 @@ static void do_header_chk(int fire)
 
 
 static int findsz(unsigned* sz, SZstruct* from, int what) {
-	while (2 * 2 == 4) {
+	while (1) {
 		if (from->n == -1) return 0;
 		if (from->n == what) {
 			*sz = from->sz;
@@ -91,6 +91,7 @@ void check_ROM_header()
 		return;
 	}
 	romhdr = (rom_header_t*)(cart.data + 0x100);
+	printf("MBC type: %d, romsize: %d, ramsize: %d\n", romhdr->type, romhdr->romsize, romhdr->ramsize);
 	if (!findsz(&(cart.rom_size), ROM_SIZES, romhdr->romsize))
 		sys_error("Unknown ROM size");
 	if (!findsz(&(cart.ram_size), RAM_SIZES, romhdr->ramsize))
@@ -104,13 +105,14 @@ void check_ROM_header()
 	MBC1 support
 ***********************************************************************/
 static struct MBC_ {
-	unsigned mode2;	// MBC1
+	int bank1;	// MBC1
+	int bank2;	// MBC1
+	int mode;	// MBC1
+
 	unsigned ramenabled;  // All MBCs
 	unsigned clock_present; // MBC3
 	unsigned clock_latched; // MBC3
 } MBC;
-// mode1 - 32*4 pages of ROM, 1 page of RAM
-// mode2 - 32 pages of ROM, 1*4 pages of RAM
 
 void mem_w8_MBC1_RAMcontrol(unsigned addr, uint8_t n) {
 	if ((n & 0xF) == 0xA) {
@@ -118,43 +120,41 @@ void mem_w8_MBC1_RAMcontrol(unsigned addr, uint8_t n) {
 		MBC.ramenabled = 1;
 	}
 	else {
-		if (MBC.ramenabled) MAPRAM(mem_r8_emptyROM, mem_w8_NULL);
+		if (MBC.ramenabled) MAPRAM(mem_r8_emptyRAM, mem_w8_NULL);
 		MBC.ramenabled = 0;
 	}
 }
-void mem_w8_MBC1_setROM(unsigned addr, uint8_t n) {
-	unsigned nn = n & 0x1F; // 5 bits
-	if (!nn) nn++;
-	if (!MBC.mode2) nn |= cart.rom[1].bank & (3 << 5);  //
-	SETROM(nn);
+void mbc1_update_mapping()
+{
+	SETROM(0, MBC.mode ? (MBC.bank2 << 5) : 0);
+	SETROM(1, (MBC.bank2 << 5) | MBC.bank1);
+	SETRAM(MBC.mode ? MBC.bank2 : 0);
 }
-void mem_w8_MBC1_setROMorRAM(unsigned addr, uint8_t n) {
-	unsigned nn = (unsigned)n & 3; // 2 bits
-	if (MBC.mode2) {
-		if (cart.ram_nbanks) SETRAM(nn);
-	}
-	else {
-		nn = (nn << 5) + (cart.rom[1].bank & 0x1F);  //
-		SETROM(nn);
-	}
+void mem_w8_MBC1_setBANK1(unsigned addr, uint8_t n) {
+	MBC.bank1 = n & 0x1F; // 5 bits
+	if (MBC.bank1 == 0) MBC.bank1 = 1;
+	mbc1_update_mapping();
+}
+void mem_w8_MBC1_setBANK2(unsigned addr, uint8_t n) {
+	MBC.bank2 = (unsigned)n & 3; // 2 bits
+	mbc1_update_mapping();
 }
 void mem_w8_MBC1_mode(unsigned addr, uint8_t n) {
-	unsigned nn;
-	if (MBC.mode2 == (n & (unsigned)1)) return;
-	MBC.mode2 = n & (unsigned)1;
-	nn = cart.rom[1].bank & 0x1F;
-	if (!nn) nn = 1;
-	SETROM(nn);
-	if (cart.ram_nbanks) SETRAM(0);
+	MBC.mode = n & (unsigned)1;
+	mbc1_update_mapping();
 }
 
 void InitMBC1_ROM(void) {
-	MEMMAP_W(0x2000, 0x4000, mem_w8_MBC1_setROM);
-	MEMMAP_W(0x4000, 0x6000, mem_w8_MBC1_setROMorRAM);
+	MEMMAP_W(0x2000, 0x4000, mem_w8_MBC1_setBANK1);
+	MEMMAP_W(0x4000, 0x6000, mem_w8_MBC1_setBANK2);
 	MEMMAP_W(0x6000, 0x8000, mem_w8_MBC1_mode);
 	MAPROM(mem_r8_ROMbank1);
-	mem_w8_MBC1_mode(0, 0);
+
 	MBC.ramenabled = 0;
+	MBC.bank1 = 1;
+	MBC.bank2 = 0;
+	MBC.mode = 0;
+	mbc1_update_mapping();
 }
 
 void InitMBC1_RAM(void) {
@@ -171,7 +171,7 @@ void mem_w8_MBC2_set(unsigned addr, uint8_t n) {
 	unsigned nn = n & 0xF;
 	if (addr & 0x2100) {  // ROM control
 		if (!nn) nn = 1;
-		SETROM(nn);
+		SETROM(1, nn);
 	}
 	else {		  // RAM control
 		if (nn == 0xA) {
@@ -202,7 +202,7 @@ void mem_w8_MBC3_setROM(unsigned addr, uint8_t n) {
 	//register unsigned nn=n&0x7F; // 7 bits
 	//if(!MBC.mode2) nn|=cart.rom[1].bank&~0x1F;  //
 	if (!n) n = 1;
-	SETROM(n);
+	SETROM(1, n);
 }
 void mem_w8_MBC3_setRAM_or_clock(unsigned addr, uint8_t n) {
 	if (!(n & ~3)) { // set RAM bank
@@ -234,11 +234,11 @@ void InitMBC3_RAM(void) {
 
 void mem_w8_MBC5_setROM0(unsigned addr, uint8_t n) {
 	unsigned nn = (unsigned)n | (cart.rom[1].bank & 0x100);
-	SETROM(nn);
+	SETROM(1, nn);
 }
 void mem_w8_MBC5_setROM1(unsigned addr, uint8_t n) {
 	unsigned nn = ((unsigned)n << 8) | (cart.rom[1].bank & 0xFF);
-	SETROM(nn);
+	SETROM(1, nn);
 }
 void mem_w8_MBC5_setRAM(unsigned addr, uint8_t n) {
 	SETRAM(n);
