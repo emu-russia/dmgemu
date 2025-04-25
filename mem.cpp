@@ -1,8 +1,8 @@
 /* GameBoy memory manager */
 #include "pch.h"
 
-mem_Read8P   mem_r8 [128];
-mem_Write8P  mem_w8 [128];
+mem_Read8P   mem_r8 [256];
+mem_Write8P  mem_w8 [256];
 
 /* VRAM */
 uint8_t vram[0x2000];
@@ -12,9 +12,6 @@ uint8_t ram[0x2000];
 
 /* high memory, OAM and hardware registers ($FE00-$FFFF) */
 uint8_t hram[0x200];
-
-extern mem_Read8P   mem_r8 [128];
-extern mem_Write8P  mem_w8 [128];
 
 /***********************************************************************
 	memory handlers control
@@ -45,7 +42,8 @@ uint8_t mem_r8_TRAP(unsigned addr) {
 	sys_error("Trap on memory read, [%X]",(unsigned)addr);
 	return 0xFF;
 }
-uint8_t mem_r8_emptyROM(unsigned addr){return 0x00; }
+uint8_t mem_r8_emptyROM(unsigned addr){return 0xFF; }
+uint8_t mem_r8_emptyRAM(unsigned addr){ return 0xFF; }
 uint8_t mem_r8_ROMbank0(unsigned addr)
 {
 	if (addr < 256 && R_BANK == 0) return introm[addr];
@@ -58,8 +56,14 @@ uint8_t mem_r8_ROMbank0(unsigned addr)
 uint8_t mem_r8_ROMbank1(unsigned addr){return cart.rom[1].ptr[addr&0x3FFF];}
 uint8_t mem_r8_RAM(unsigned addr) {return ram[addr&0x1FFF];}
 uint8_t mem_r8_VRAM(unsigned addr) {return vram[addr&0x1FFF];}
-uint8_t mem_r8_RAMbank(unsigned addr) {return cart.ram[0].ptr[addr&cart.ram_amask];}
-uint8_t mem_r8_RAMbank4(unsigned addr) {return cart.ram[0].ptr[addr&0x1FF]|0xF0;}
+uint8_t mem_r8_RAMbank(unsigned addr) {
+	if (cart.ram.ptr) {
+		return cart.ram.ptr[addr & cart.ram_amask];
+	}
+	else {
+		return 0xFF;
+	}
+}
 void mem_w8_NULL(unsigned addr, uint8_t n) {}
 void mem_w8_TRAP(unsigned addr, uint8_t n) {
 	sys_error("Trap on memory write, [%X] <- %X ",(unsigned)addr,(unsigned)n);
@@ -68,22 +72,25 @@ void mem_w8_VRAM(unsigned addr, uint8_t n) {
 	addr &=0x1fff;vram[addr] = n; tilecache[addr>>4] = 0;
 }
 void mem_w8_RAM(unsigned addr, uint8_t n) {ram[addr&0x1FFF]=n;}
-void mem_w8_RAMbank(unsigned addr, uint8_t n) {cart.ram[0].ptr[addr&cart.ram_amask]=n;}
-void mem_w8_RAMbank4(unsigned addr, uint8_t n) {cart.ram[0].ptr[addr&0x1FF]=n;}
+void mem_w8_RAMbank(unsigned addr, uint8_t n) {
+	if (cart.ram.ptr) {
+		cart.ram.ptr[addr & cart.ram_amask] = n;
+	}
+}
 
 void SETRAM(unsigned n) {
 	n&=cart.ram_nmask;
 	//if(n>=cart.ram_nbanks)
 		//sys_error("RAM bank not present: [%X]",n);
-	cart.ram[0].bank = n;
-	cart.ram[0].ptr = cart.ramdata+n*0x4000;
+	cart.ram.bank = n;
+	cart.ram.ptr = cart.ramdata+n*0x2000;
 }
-void SETROM(unsigned n) {
+void SETROM(unsigned i, unsigned n) {
 	n&=cart.rom_nmask;
 	//if(n>=cart.rom_nbanks)
 //		sys_error("ROM bank not present: [%X]",(n));
-	cart.rom[1].bank = (n);
-	cart.rom[1].ptr = cart.romdata+n*0x4000;
+	cart.rom[i].bank = (n);
+	cart.rom[i].ptr = cart.romdata+n*0x4000;
 }
 // Check for 0 is performed for lower 5 bits, not for whole address
 
@@ -210,22 +217,6 @@ void mem_w8_IO(unsigned addr, uint8_t data) {
 *************************************************************************
 */
 
-/* only for DEBUG */
-static void dump_internal_RAM()
-{
-#if 0
-	FILE *f;
-
-	f = fopen("RAM.bin", "wb");
-	fwrite(ram, 1, sizeof(ram), f);
-	fclose(f);
-
-	f = fopen("HRAM.bin", "wb");
-	fwrite(hram, 1, sizeof(hram), f);
-	fclose(f);
-#endif
-}
-
 /* fill zeroed/random data */
 static void init_internal_RAM(int how)
 {
@@ -249,8 +240,6 @@ static void init_internal_RAM(int how)
 	}
 
 	memset(hram, 0, sizeof(hram));
-
-	//dump_internal_RAM();
 }
 
 static void mem_InitGeneric(void);
@@ -341,13 +330,13 @@ void mem_shutdown()
 static void mem_InitGeneric(void) {
 	unsigned n;
 	memset(cart.rom,0,sizeof(cart.rom));
-	memset(cart.ram,0,sizeof(cart.ram));
+	memset(&cart.ram,0,sizeof(cart.ram));
 	cart.romdata = cart.data;
 	cart.rom_nbanks = (cart.rom_size+0x3FFF)>>14;
 	for(n = 1;n<cart.rom_nbanks;n<<=1);
 	cart.rom_nmask = n-1;
 	cart.rom[0].ptr = cart.romdata;
-	SETROM(1);
+	SETROM(1, 1);
 	if(cart.ram_size) {
 		cart.ram_nbanks = (cart.ram_size+0x1FFF)>>13;
 		cart.ram_end= 0xC000; // ram_end is obsolete, whole range is mapped always fo compatibility reasons (ram_amask used instead)
@@ -374,19 +363,16 @@ static void mem_InitGeneric(void) {
 	MEMMAP_R(0xE000,0xFE00,mem_r8_RAM);
 	MEMMAP_W(0xFE00,0x10000,mem_w8_IO);  // map IO area
 	MEMMAP_R(0xFE00,0x10000,mem_r8_IO);  
-
-	//MEMMAP_R(0xA000,0xC000,mem_r8_emptyROM);
+	
+	MEMMAP_R(0xA000,0xC000,mem_r8_emptyRAM); // RAM is not connected
 	MEMMAP_W(0xA000,0xC000,mem_w8_NULL); // RAM is not connected
 
 	MEMMAP_W(0x0000,0x8000,mem_w8_NULL); //
 	
-
-	//if((n=cart.rom_size)>0x8000) n = 0x8000;
 	MEMMAP_R(0x0000,0x4000,mem_r8_ROMbank0); // map up to 32 kb of ROM at start
-	if(cart.rom_size>0x4000)
+	if (cart.rom_size > 0x4000) {
 		MAPROM(mem_r8_ROMbank1);
-		//MEMMAP_R(0xA000,0xA000+n,mem_r8_emptyROM); // RAM is disabled by default
-	//MEMMAP_R(0xA000,0xA000+n,mem_r8_RAMbank); // map up to 8 kb of RAM at start
+	}
 }
 
 /**********************************************************************
@@ -394,11 +380,11 @@ static void mem_InitGeneric(void) {
 **********************************************************************/
 uint16_t mem_read16 (unsigned addr) {
 	return (uint16_t)(
-	(unsigned)mem_r8[addr>>9](addr)+
-	((unsigned)mem_r8[(addr+1)>>9](addr+1)<<8));
+	(unsigned)mem_r8[addr>>8](addr)+
+	((unsigned)mem_r8[(addr+1)>>8](addr+1)<<8));
 }
 void mem_write16 (unsigned addr,unsigned d) {
-	mem_w8[addr>>9](addr,(uint8_t)d);
+	mem_w8[addr>>8](addr,(uint8_t)d);
 	addr++;
-	mem_w8[addr>>9](addr,(uint8_t)(d>>8));
+	mem_w8[addr>>8](addr,(uint8_t)(d>>8));
 }
