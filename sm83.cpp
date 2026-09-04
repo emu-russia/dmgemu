@@ -1,4 +1,4 @@
-﻿// SM83 interpreter.
+// SM83 interpreter.
 // The DMG SoC uses a custom SHARP SM83 core, which mostly uses the Z80 instruction set, but a completely proprietary implementation + additional opcodes and HLT/STOP modes.
 #include "pch.h"
 
@@ -6,6 +6,7 @@
 union Z80reg r_af, r_bc, r_de, r_hl;
 union Z80reg r_sp, r_pc;
 unsigned HALT, IME;
+static unsigned ime_delay;	// EI: IME takes effect after the next instruction
 
 #define OP(n) break; case 0x##n:
 #define CB(n) break; case 0x##n:
@@ -238,6 +239,10 @@ static int cb_clk_t[256] = {
 
 void sm83_check4int(void) { // Check for posibility of interrupt, do it if possible
 	unsigned imask,iflags,intaddr;
+	if(ime_delay) return;	// after EI interrupts only take effect after the next instruction
+	/* HALT is always woken by an enabled+requested interrupt, even with
+	   IME=0 (in that case execution simply resumes, no dispatch happens). */
+	if (HALT && (R_IE & R_IF & 0x1F)) HALT = 0;
 	if(iflags=(IME & R_IE & R_IF)) // if interrupts enabled and there are some active interrupts in queue
 	{
 		imask=1;intaddr=0x40;
@@ -246,6 +251,7 @@ void sm83_check4int(void) { // Check for posibility of interrupt, do it if possi
 		IME = HALT = 0;	// Disable all interrupts, exit from HALT mode
 		PUSH(r_pc);
 		R_PC = intaddr;
+		gb_clk += 5;	// interrupt dispatch takes 5 M-cycles (push+jump) on SM83
 	}
 }
 /*
@@ -293,6 +299,9 @@ borderline typically represent CPU-independent events, such as:
 1: LCD mode changes(both LCD interrupts included)
 2: timer based interrupts
 */
+/* =================== TEMPORARY CPU trace =================== */
+/* Debug hook - only compiled with DMGEMU_DEBUG_HOOKS (see dbghooks.h). */
+
 void sm83_execute_until(uint32_t clk_nextevent)
 {
 	/* temporaries for calculations */
@@ -300,8 +309,14 @@ uint8_t tmp8;
 unsigned tmp32;
 if(HALT) {gb_clk=clk_nextevent;return;}//clkmax;}
 while(gb_clk<clk_nextevent) {
+		/* Dispatch interrupts between instructions.  Interrupts are sampled
+		   between instructions; an EI only allows dispatch *after* the
+		   instruction following it (one-instruction EI delay). */
+		if (ime_delay) ime_delay = 0;
+		else if (IME & R_IE & R_IF & 0x1F) sm83_check4int();
 		register unsigned opcode;
 		unsigned core_clk;
+		uint32_t trace_pc = R_PC;
 		opcode = FETCH();
 		core_clk = base_clk_t[opcode];
 		switch(opcode) {
@@ -321,7 +336,7 @@ OP(0C) { INC(R_C); }                    // INC C
 OP(0D) { DEC(R_C); }                    // DEC C
 OP(0E) { R_C = FETCH(); }               // LD C,n
 OP(0F) { RRCA(R_A); }                   // RRCA
-OP(10) { FETCH();}         // STOP     ? - not in table	
+OP(10) { FETCH(); mmio_div_write(); }    // STOP - resets divider too (DMG stops until a button)
 OP(11) { R_DE = FETCH16();}// LD DE,nn
 OP(12) { WR(R_DE, R_A); }               // LD (DE),A
 OP(13) { R_DE++; }                      // INC DE
@@ -424,10 +439,30 @@ OP(72) { WR(R_HL, R_D); }				// LD (HL),D
 OP(73) { WR(R_HL, R_E); }				// LD (HL),E
 OP(74) { WR(R_HL, R_H); }				// LD (HL),H
 OP(75) { WR(R_HL, R_L); }				// LD (HL),L
-OP(76) { HALT = 1;
-gb_clk = clk_nextevent; // set counters to their end value
-return;
-
+OP(76) {
+	if (IME && (R_IE & R_IF & 0x1F)) {
+		/* interrupt already pending with IME=1: HALT does not sleep;
+		   it is serviced right after this instruction */
+		HALT = 0;
+		ime_delay = 0;
+		break;
+	}
+	if (IME) {
+		HALT = 1;
+		gb_clk = clk_nextevent;		// halt until an interrupt is serviced
+		return;
+	}
+	if (R_IE & R_IF & 0x1F) {
+		/* HALT bug (DMG): with IME=0 and an interrupt already pending the CPU
+		   does not halt.  The byte after HALT is executed now and again once
+		   the pending interrupt is serviced later and execution resumes here,
+		   i.e. the instruction after HALT is executed twice overall. */
+		HALT = 0;
+	} else {
+		HALT = 1;
+		gb_clk = clk_nextevent;		// halt; wakes when an interrupt is enabled+serviced
+		return;
+	}
 }					// HALT
 OP(77) { WR(R_HL, R_A); }				// LD (HL),A
 OP(78) { R_A = R_B; }					// LD A,B
@@ -795,9 +830,8 @@ OP(D5) { PUSH(r_de); }					// PUSH DE
 OP(D6) { tmp8 = FETCH(); SUB(tmp8); }	// SUB A,n
 OP(D7) { RST(0x10); }					// RST 10h
 OP(D8) { if(R_F & CF) goto opC9; else core_clk -= 3; } // RETC
-OP(D9) { POP(r_pc); IME = INT_ALL;
-sm83_check4int();
-}			// [SM83]	IRET
+OP(D9) { POP(r_pc); IME = INT_ALL; ime_delay = 0;
+}			// [SM83]	IRET (interrupts serviced at next instruction boundary)
 OP(DA) { if(R_F & CF) R_PC = FETCH16(); else {R_PC += 2; core_clk--;} } // JPC nn
 OP(DB) {Undefined();}			// [SM83] not implemented
 OP(DC) { if(R_F & CF) goto opCD; else {R_PC += 2; core_clk -= 3;} } // CALLC
@@ -824,7 +858,7 @@ OP(EF) { RST(0x28); }					// RST 28h
 OP(F0) { tmp32 = 0xff00 + FETCH(); R_A = RD(tmp32); }	// [SM83] LD A,(FF00+n)
 OP(F1) { POPAF; }					// POP AF
 OP(F2) { tmp32 = 0xff00 + R_C; R_A = RD(tmp32); }		// [SM83] LD A,(FF00+C)
-OP(F3) { IME = INT_NONE; }						// [SM83] DI
+OP(F3) { IME = INT_NONE; ime_delay = 0; }					// [SM83] DI (immediate on DMG)
 OP(F4) {Undefined();}			// [SM83] NOT implemented
 OP(F5) { PUSHAF; }					// PUSH AF
 OP(F6) { tmp8=FETCH();OR(tmp8); }					// OR A,n
@@ -833,9 +867,7 @@ OP(F8) { tmp8 = FETCH(); LDHLSP(tmp8); }// [SM83] LDHL SP,n
 OP(F9) { R_SP = R_HL; }					// LD SP,HL
 OP(FA) { 
 	tmp32 = FETCH16();R_A = RD(tmp32); }// [SM83] LD A,(nn)
-OP(FB) { IME = INT_ALL;
-sm83_check4int();
-}						// [SM83] EI
+OP(FB) { IME = INT_ALL; ime_delay = 1; }					// [SM83] EI (one-instruction delay)
 OP(FC) {Undefined();}			// [SM83] NOT implemented
 OP(FD) {Undefined();}			// [SM83] NOT implemented
 OP(FE) { tmp8 = FETCH(); CP(tmp8); }	// CP A,n
@@ -843,6 +875,7 @@ OP(FF) { RST(0x38); }					// RST 38h
 			break;
 		}
 		gb_clk+= core_clk;	// Increment core clock counter
+		dbg_cpu_trace(trace_pc, opcode, gb_clk);
 		//so_clk+=core_clk;	// Increment sound clock counter
 /* TODO: both counters can be same, if wrapping for internal sound counters is moved
 		 to gb.c. As result one slow memory->memory addition will be removed
@@ -870,5 +903,5 @@ void sm83_init()
 {
 	filltables();
 	R_PC = 0;
-	HALT = IME = 0;
+	HALT = IME = ime_delay = 0;
 }

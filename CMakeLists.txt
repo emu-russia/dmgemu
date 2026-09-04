@@ -15,7 +15,9 @@ find_package(SDL2 REQUIRED CONFIG COMPONENTS SDL2main)
 
 add_executable (dmgemu 
 	apu.cpp 
+	dbghooks.cpp
 	gb.cpp
+	mmio.cpp
 	introm.cpp
 	lcd.cpp
 	main.cpp
