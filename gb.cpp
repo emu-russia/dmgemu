@@ -96,6 +96,11 @@ void start()
 		gb_old = gb_clk;
 		R_LY=0;
 		for(i=144;i!=0;i--) {
+			if(!(R_LCDC & 0x80)) { // LCD off: no scanline activity, LY stays 0
+				R_LY = 0;
+				execute(114);
+				continue;
+			}
 			check4LYC();
 			/* LCD during OAM-search (scan sprites) */
 
@@ -121,11 +126,18 @@ void start()
 		//R_LY = 143;
 		/* LCD during V-Blank (10 "empty" lines) */
 		//if(R_STAT & 0x10) // questionable
-		R_IF|=INT_VBLANK; // Queue V-blank int
-		sm83_check4int();
-		STAT_MODE(1);
+		if(R_LCDC & 0x80) { // V-Blank only while LCD is on
+			R_IF|=INT_VBLANK; // Queue V-blank int
+			sm83_check4int();
+			STAT_MODE(1);
+		}
 		ppu_vsync();
 		for(i=10;i!=0;i--) {
+			if(!(R_LCDC & 0x80)) { // LCD off: no scanline activity
+				R_LY = 0;
+				execute(114);
+				continue;
+			}
 			check4LYC();
 			execute(114);
 			R_LY++;

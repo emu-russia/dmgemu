@@ -141,11 +141,12 @@ void mem_w8_IO(unsigned addr, uint8_t data) {
 			return;
 		}
 		switch(addr & 0xff) {
-/*
-		case 0x40: // LCDC
-//            if((R_STAT & 3) != 1) return;
+		case 0x40: // LCDC - LCD off resets LY to 0 (and stops scanline/vblank IRQs)
+			if(!(data & 0x80) && (R_LCDC & 0x80)) {
+				R_LY = 0;
+				R_STAT = (R_STAT & 0xFC) | 0; // mode 0 while LCD off
+			}
 			break;
-*/
 		case 0x04:	// R_DIV - divider counter, reset to 0 when written
 			mmio_div_write();
 			return;
