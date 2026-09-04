@@ -15,6 +15,7 @@ static unsigned ime_delay;	// EI: IME takes effect after the next instruction
 static void Undefined(void)
 {
 	R_PC--;
+	dbg_log_event("undefined_opcode", "");	// debug hook (no-op in release)
 	show_regs ();
 	sys_error("Undefined SM83 opcode %02X at PC = %.4X",(unsigned)RD(R_PC), (unsigned)(R_PC));
 }

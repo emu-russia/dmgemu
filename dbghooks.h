@@ -13,9 +13,12 @@
 #ifdef DMGEMU_DEBUG_HOOKS
 void dbg_cpu_trace(uint32_t pc, unsigned opcode, uint32_t clk);
 void dbg_snap_frame(uint32_t const* pbuf, int w, int h);
+void dbg_log_event(char const* tag, char const* text);
 #else
 static inline void dbg_cpu_trace(uint32_t pc, unsigned opcode, uint32_t clk)
 { (void)pc; (void)opcode; (void)clk; }
 static inline void dbg_snap_frame(uint32_t const* pbuf, int w, int h)
 { (void)pbuf; (void)w; (void)h; }
+static inline void dbg_log_event(char const* tag, char const* text)
+{ (void)tag; (void)text; }
 #endif

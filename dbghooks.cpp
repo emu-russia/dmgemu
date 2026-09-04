@@ -28,8 +28,9 @@ void dbg_cpu_trace(uint32_t pc, unsigned opcode, uint32_t clk)
 	}
 	if (trace_file == NULL) return;
 	if (trace_n >= trace_max) return;
-	fprintf(trace_file, "%04X %02X %04X %04X %04X %04X %04X %u %02X %02X %02X %02X %08X\n",
-		pc, opcode, R_AF, R_BC, R_DE, R_HL, R_SP, IME != 0, R_LY, R_STAT, R_IF, R_IE, clk);
+	fprintf(trace_file, "%04X %02X %04X %04X %04X %04X %04X %u %02X %02X %02X %02X %02X %08X b%d\n",
+		pc, opcode, R_AF, R_BC, R_DE, R_HL, R_SP, IME != 0, R_LY, R_STAT, R_IF, R_IE, R_LCDC, clk,
+		cart.rom[1].bank);
 	trace_n++;
 	if ((trace_n & 0x3FF) == 0) fflush(trace_file);
 }
@@ -58,6 +59,29 @@ void dbg_snap_frame(uint32_t const* pbuf, int w, int h)
 	fwrite(hram, 1, 0x200, snap_file);
 	fwrite(vram, 1, 0x2000, snap_file);
 	fwrite(pbuf, 4, (size_t)w * h, snap_file);
+}
+
+/* =================== fatal event log =================== */
+/* DMGEMU_FATAL_LOG env: append every show_regs / sys_error payload here
+   (plus CPU state), so crashes like "Undefined opcode" can be inspected
+   from the log file instead of only via message boxes.               */
+void dbg_log_event(char const* tag, char const* text)
+{
+	static FILE *ev = NULL;
+	static int ev_tried = 0;
+	if (!ev_tried) {
+		ev_tried = 1;
+		const char *name = getenv("DMGEMU_FATAL_LOG");
+		if (name && name[0]) ev = fopen(name, "a");
+	}
+	if (!ev) return;
+	fprintf(ev, "======== %s ========\n", tag);
+	fprintf(ev, "PC=%04X AF=%04X BC=%04X DE=%04X HL=%04X SP=%04X CLK=%u IME=%u HALT=%u\n",
+		R_PC, R_AF, R_BC, R_DE, R_HL, R_SP, (unsigned)gb_clk, IME != 0, HALT != 0);
+	fprintf(ev, "%s\n", text ? text : "(null)");
+	fprintf(ev, "LCDC=%02X STAT=%02X LY=%02X IF=%02X IE=%02X TIMA=%02X TMA=%02X TAC=%02X DIV=%02X\n",
+		R_LCDC, R_STAT, R_LY, R_IF, R_IE, R_TIMA, R_TMA, R_TAC, R_DIV);
+	fflush(ev);
 }
 
 #endif /* DMGEMU_DEBUG_HOOKS */
