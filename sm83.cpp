@@ -315,7 +315,7 @@ while(gb_clk<clk_nextevent) {
 		   instruction following it (one-instruction EI delay). */
 		if (ime_delay) ime_delay = 0;
 		else if (IME & R_IE & R_IF & 0x1F) sm83_check4int();
-		register unsigned opcode;
+		unsigned opcode;
 		unsigned core_clk;
 		uint32_t trace_pc = R_PC;
 		opcode = FETCH();
