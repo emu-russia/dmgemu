@@ -14,16 +14,11 @@ void gb_init(void);
 void gb_shutdown(void);
 void start(void);
 void check4LYC(void);
-void gb_reload_tima(unsigned data);
 
 //void check4LCDint(void);
 
 
 extern uint32_t gb_clk;
-extern uint32_t gb_timerclk; // time before next timer interrupt
-extern uint32_t gb_divbase;
-extern uint32_t gb_timbase;
-extern uint8_t gb_timshift;
 
 #define BENCHMARK 0
 

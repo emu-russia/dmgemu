@@ -35,6 +35,8 @@
 #include "sound.h"
 #include "pad.h"
 #include "gb.h"
+#include "mmio.h"
+#include "dbghooks.h"
 #include "introm.h"
 // perftimer-good timer implementation for win32/x86MMX
 #include "perftimer.h"

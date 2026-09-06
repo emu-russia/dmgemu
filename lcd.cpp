@@ -81,11 +81,14 @@ void sdl_win_shutdown()
 	delete[] pbuf;
 }
 
+/* =================== TEMPORARY per-frame state snapshot =================== */
+/* Debug hook - only compiled with DMGEMU_DEBUG_HOOKS (see dbghooks.h). */
+
 void sdl_win_update()
 {
+	dbg_snap_frame(pbuf, screen_width, screen_height);
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
-
 		switch (event.type) {
 			case SDL_QUIT:
 				gb_shutdown();

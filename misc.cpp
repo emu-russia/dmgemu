@@ -10,6 +10,8 @@ void sys_error(const char *fmt, ...)
 	vsprintf(buf, fmt, arg);
 	va_end(arg);
 
+	dbg_log_event("sys_error", buf);	// debug hook (no-op in release)
+
 #ifdef _WIN32
 	MessageBox(NULL, buf, "SYSTEM ERROR", MB_OK | MB_TOPMOST | MB_ICONSTOP);
 #else
@@ -88,6 +90,8 @@ void show_regs()
 	p += sprintf(&buf[p], "STAT=%02X    LYC=%02X   OBP0=%02X\n", HRAM(0xff41), HRAM(0xff45), HRAM(0xff48));
 	p += sprintf(&buf[p], "SCX=%02X     WX=%02X    OBP1=%02X\n", HRAM(0xff43), HRAM(0xff4b), HRAM(0xff49));
 	p += sprintf(&buf[p], "SCY=%02X     WY=%02X\n", HRAM(0xff42), HRAM(0xff4a));
+
+	dbg_log_event("show_regs", buf);	// debug hook (no-op in release)
 
 #ifdef _WIN32
 	MessageBox(NULL, buf, "SM83 Core and hardware registers dump", MB_OK | MB_TOPMOST | MB_ICONINFORMATION);

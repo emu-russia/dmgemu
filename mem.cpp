@@ -121,12 +121,9 @@ uint8_t mem_r8_IO(unsigned addr) {
 				return ~pad & 0xf;
 			}
 		case 0x4:	// R_DIV - divider counter read
-			return (uint8_t)((gb_clk>>6)+gb_divbase);
+			return mmio_div_read();
 		case 0x5:	// R_TIMA - timer accumulator read
-			if(R_TAC&4)
-				return (uint8_t)((gb_clk>>gb_timshift)+gb_timbase); // current value
-			// otherwise old(frozen) value will be returned
-			break;
+			return mmio_tima_read();
 		case 0x50:
 			return R_BANK & 1;
 		}
@@ -134,8 +131,6 @@ uint8_t mem_r8_IO(unsigned addr) {
 	return hram[addr & 0x1ff];
 }
 
-
-static const uint8_t timshift[4]={8,2,4,6};
 
 void mem_w8_IO(unsigned addr, uint8_t data) {
 	__log("HWR %.4X = %.2X [PC=%.4X]", addr, data, R_PC);
@@ -146,35 +141,26 @@ void mem_w8_IO(unsigned addr, uint8_t data) {
 			return;
 		}
 		switch(addr & 0xff) {
-/*
-		case 0x40: // LCDC
-//            if((R_STAT & 3) != 1) return;
+		case 0x40: // LCDC - LCD off resets LY to 0 (and stops scanline/vblank IRQs)
+			if(!(data & 0x80) && (R_LCDC & 0x80)) {
+				R_LY = 0;
+				R_STAT = (R_STAT & 0xFC) | 0; // mode 0 while LCD off
+			}
 			break;
-*/
 		case 0x04:	// R_DIV - divider counter, reset to 0 when written
-			gb_divbase = -(int32_t)(gb_clk >> 6);
+			mmio_div_write();
 			return;
 		case 0x05:	// R_TIMA - timer accumulator write
-			gb_reload_tima(R_TIMA=data);
-			// reload TIMA with new value,calculate time for next interrupt breakpoint
+			mmio_tima_write(data);
 			return;
 		case 0x07:  // R_TAC
-			if(!(R_TAC^data)) return; // nothing changed
-			if(R_TAC&4) // Timer was enabled?
-				R_TIMA=(uint8_t)((gb_clk>>gb_timshift)+gb_timbase); // refresh current value
-			gb_timshift = timshift[data&3];	// new clock shift rate
-			gb_timerclk = MAXULONG;
-			if(data&4) // Timer clock enabled?
-				gb_reload_tima(R_TIMA); // restart TIMA
-			R_TAC=data;
-		return;
+			mmio_tac_write(data);
+			return;
 		case 0x0F : // R_IF  (interrupt request)
 			R_IF = data;
-			sm83_check4int(); 
 		return;
 		case 0xFF : // R_IE  (interrupt mask)
 			R_IE = data;
-			sm83_check4int();
 		return;
 		//case 0x41: // STAT
 		  //  R_STAT = (R_STAT &7)|(data&0xF8);
