@@ -26,7 +26,7 @@ Controls:
 
 ## Build for Windows
 
-Use Windows and VS2022. Open dmgemu.sln and click the Build button with your left heel.
+Use Windows and VS2026. Open dmgemu.sln and click the Build button with your left heel.
 
 ## Build for Linux
 
