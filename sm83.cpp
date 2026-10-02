@@ -238,6 +238,26 @@ static int cb_clk_t[256] = {
 *************************************************************************
 */
 
+/* Interrupt requests are sampled by the CPU during the last machine cycle of
+   an instruction, so the handler is only called once that instruction has
+   finished all of its memory accesses.  The interpreter below therefore takes
+   the sample *after* every instruction; the hardware keeps requesting (IF)
+   until then, so nothing is lost.
+
+   This matters for the very common "wait for the start of VBlank" idiom
+
+       wait:  ldh a,($FF44)     ; LY
+              cp  $90
+              jr  nz,wait
+
+   run with IME=1 and the VBlank interrupt enabled: LY becomes $90 at the
+   beginning of the interrupt, so the CPU has to be able to *read* $90 in the
+   instruction it is executing when the request appears (the pushed AF of the
+   handler carries that value to the `cp` after the RETI).  Dispatching the
+   handler before the running instruction had a chance to read LY made such
+   loops spin forever (WIZARDS & WARRIORS: the title screen fade never came
+   back and the screen stayed white).                                    */
+
 void sm83_check4int(void) { // Check for posibility of interrupt, do it if possible
 	unsigned imask,iflags,intaddr;
 	if(ime_delay) return;	// after EI interrupts only take effect after the next instruction
@@ -308,13 +328,19 @@ void sm83_execute_until(uint32_t clk_nextevent)
 	/* temporaries for calculations */
 uint8_t tmp8;
 unsigned tmp32;
-if(HALT) {gb_clk=clk_nextevent;return;}//clkmax;}
 while(gb_clk<clk_nextevent) {
-		/* Dispatch interrupts between instructions.  Interrupts are sampled
-		   between instructions; an EI only allows dispatch *after* the
-		   instruction following it (one-instruction EI delay). */
-		if (ime_delay) ime_delay = 0;
-		else if (IME & R_IE & R_IF & 0x1F) sm83_check4int();
+		/* A halted CPU is woken by any enabled+requested interrupt; with
+		   IME=1 the handler is called before the instruction following the
+		   HALT (see the sample at the bottom of this loop). */
+		if(HALT) {
+			if(R_IE & R_IF & 0x1F) {
+				HALT = 0;
+				sm83_check4int();
+				continue;
+			}
+			gb_clk = clk_nextevent;	// nothing to do: idle until the next event
+			return;
+		}
 		unsigned opcode;
 		unsigned core_clk;
 		uint32_t trace_pc = R_PC;
@@ -882,6 +908,11 @@ OP(FF) { RST(0x38); }					// RST 38h
 		 to gb.c. As result one slow memory->memory addition will be removed
 */
 		//__log("Op %.2X",opcode);
+
+		/* Interrupt sample point: end of the instruction (see sm83_check4int).
+		   EI (& RETI) only allow a dispatch after the following instruction. */
+		if (ime_delay) ime_delay = 0;
+		else if (IME & R_IE & R_IF & 0x1F) sm83_check4int();
 	}
 }
 
