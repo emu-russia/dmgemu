@@ -112,10 +112,18 @@ void start()
 			STAT_MODE(2);
 			ppu_enumsprites();
 			execute(20);
-			/* LCD during data transfer (draw line) */
+			/* LCD during data transfer (draw line).
+			   The line is drawn *after* the CPU has had its mode 3 time:
+			   the PPU reads SCX/SCY/LCDC/BGP while it fetches the line, so a
+			   write that lands in mode 3 still belongs to the line that is
+			   being scanned.  Drawing it before execute(43) would push every
+			   such write onto the next scanline - which breaks the per-line
+			   raster effects games use (e.g. the unfolding "ZELDA" logo in
+			   Link's Awakening, see issue #2: the SCY written for line N
+			   arrived one line late and left a stray line above the logo). */
 			STAT_MODE(3); /* no interrupt here !! */
-			ppu_refreshline();
 			execute(43);
+			ppu_refreshline();
 
 			/* LCD during H-Blank */
 			STAT_MODE(0);
