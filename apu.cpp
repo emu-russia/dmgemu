@@ -4,23 +4,8 @@
 /* Warning! like in core, sound clock is incremented
 at rate of 1048576Hz, not 1048576*4 Hz*/
 
-typedef struct
-{
-	int on;
-	unsigned pos;
-	unsigned cnt,encnt,swcnt;
-	//int len, enlen, swlen;
-	//int swfreq;
-	unsigned freq,swfreq;
-	unsigned envol;//, endir;
-} sndchan;
-
-typedef struct
-{
-	unsigned outfreq,ratelo,ratehi,z0;
-	sndchan ch[4];
-	uint8_t wave[16];
-} apu;
+/* sndchan / apu_state are declared in apu.h (they are snapshotted by the
+   save state code) */
 
 const static uint8_t dmgwave[16] =
 {
@@ -50,7 +35,7 @@ const static int divtab[8] =
 	14
 };
 
-apu snd;
+apu_state snd;
 
 static uint8_t noise7[16];
 static uint8_t noise15[4096];
@@ -510,7 +495,6 @@ void apu_mix_basic(uint32_t apu_clk_new) {
 	apu_clk_inner[1] =  clk[1];
 }
 
-
 void apu_mix(void) {
 	unsigned i,tmp,tmp2,swperiod,enperiod;
 	uint8_t *pt;
@@ -586,4 +570,24 @@ void apu_mix(void) {
 	}
 	apu_mix_basic(gb_clk);
 	benchmark_sound+=GetTimer();
+}
+
+/* **********************************************************************
+	save states: the channel state plus the sound clock dividers
+********************************************************************** */
+
+void apu_state_save(SaveState* st)
+{
+	memcpy(&st->apu.snd, &snd, sizeof(snd));
+	st->apu.clk_inner[0] = apu_clk_inner[0];
+	st->apu.clk_inner[1] = apu_clk_inner[1];
+	st->apu.clk_nextchange = apu_clk_nextchange;
+}
+
+void apu_state_load(const SaveState* st)
+{
+	memcpy(&snd, &st->apu.snd, sizeof(snd));
+	apu_clk_inner[0] = st->apu.clk_inner[0];
+	apu_clk_inner[1] = st->apu.clk_inner[1];
+	apu_clk_nextchange = st->apu.clk_nextchange;
 }

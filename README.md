@@ -17,6 +17,9 @@ Controls:
 - Z: B
 - X: A
 - Enter: press all buttons at once (to do game save or reset etc.)
+- F5: Save state to the current slot
+- F6: Select the next save state slot (0-2)
+- F7: Load state from the current slot
 - F8: Switch frame limiter on/off (Limited to 1000 FPS)
 - F9: Switch LCD effect on/off
 - F12: Turn sound on/off

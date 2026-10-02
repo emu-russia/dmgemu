@@ -153,3 +153,21 @@ void start()
 		apu_mix();
 	}
 }
+
+/**********************************************************************
+	save states
+**********************************************************************/
+
+void gb_state_save(SaveState* st)
+{
+	st->gb_clk = gb_clk;
+	st->gb_eventclk = gb_eventclk;
+	st->lcd_int_on = lcd_int_on;
+}
+
+void gb_state_load(const SaveState* st)
+{
+	gb_clk = st->gb_clk;
+	gb_eventclk = st->gb_eventclk;
+	lcd_int_on = st->lcd_int_on;
+}
