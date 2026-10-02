@@ -257,3 +257,66 @@ void InitMBC5_ROM(void) {
 void InitMBC5_RAM(void) {
 	InitMBC1_RAM();
 }
+
+/***********************************************************************
+	save states
+***********************************************************************/
+
+void cart_state_save(SaveState* st)
+{
+	st->mbc.bank1 = MBC.bank1;
+	st->mbc.bank2 = MBC.bank2;
+	st->mbc.mode = MBC.mode;
+	st->mbc.ramenabled = MBC.ramenabled;
+	st->mbc.clock_present = MBC.clock_present;
+	st->mbc.clock_latched = MBC.clock_latched;
+	st->mbc.rom_bank0 = cart.rom[0].bank;
+	st->mbc.rom_bank1 = cart.rom[1].bank;
+	st->mbc.ram_bank = cart.ram.bank;
+}
+
+/* Re-connect the $A000-$BFFF window the way the mapper left it.
+   The bank contents themselves are in the state file / in the ROM. */
+static void cart_map_saved_window(void)
+{
+	switch (romhdr->type) {
+	case 5:			/* MBC2 */
+	case 6:
+		if (MBC.ramenabled) { MAPRAM(mem_r8_RAMbank, mem_w8_RAMbank); }
+		else { MAPRAM(mem_r8_emptyROM, mem_w8_NULL); }
+		break;
+	case 2:			/* MBC1 */
+	case 3:
+	case 8:			/* plain ROM+RAM */
+	case 9:
+	case 0x0F:		/* MBC3 */
+	case 0x10:
+	case 0x11:
+	case 0x12:
+	case 0x13:
+	case 0x1A:		/* MBC5 */
+	case 0x1B:
+	case 0x1D:
+	case 0x1E:
+		if (MBC.ramenabled) { MAPRAM(mem_r8_RAMbank, mem_w8_RAMbank); }
+		else { MAPRAM(mem_r8_emptyRAM, mem_w8_NULL); }
+		break;
+	default:		/* ROM only, MBC1/MBC5 without RAM: nothing to restore */
+		break;
+	}
+}
+
+void cart_state_load(const SaveState* st)
+{
+	MBC.bank1 = (int)st->mbc.bank1;
+	MBC.bank2 = (int)st->mbc.bank2;
+	MBC.mode = (int)st->mbc.mode;
+	MBC.ramenabled = st->mbc.ramenabled;
+	MBC.clock_present = st->mbc.clock_present;
+	MBC.clock_latched = st->mbc.clock_latched;
+
+	SETROM(0, st->mbc.rom_bank0);
+	SETROM(1, st->mbc.rom_bank1);
+	SETRAM(st->mbc.ram_bank);
+	cart_map_saved_window();
+}

@@ -275,3 +275,31 @@ void ppu_vsync()
 		sdl_win_update_title(title);
 	}
 }
+
+// **********************************************************************
+
+/* save states: the whole visible PPU state, except the tile cache, which
+   is only a copy of VRAM and is rebuilt on load */
+
+static_assert(sizeof(SPR) == 4, "used_spr is serialized as 4 bytes per sprite");
+
+void ppu_state_save(SaveState* st)
+{
+	memcpy(st->ppu.linebuffer, linebuffer, sizeof(st->ppu.linebuffer));
+	memcpy(st->ppu.mainpal, mainpal, sizeof(st->ppu.mainpal));
+	memcpy(st->ppu.used_spr, used_spr, sizeof(st->ppu.used_spr));
+	st->ppu.num_sprites = num_sprites;
+	st->ppu.lcd_WYline = (int32_t)lcd_WYline;
+}
+
+void ppu_state_load(const SaveState* st)
+{
+	memcpy(linebuffer, st->ppu.linebuffer, sizeof(st->ppu.linebuffer));
+	memcpy(mainpal, st->ppu.mainpal, sizeof(st->ppu.mainpal));
+	memcpy(used_spr, st->ppu.used_spr, sizeof(st->ppu.used_spr));
+	num_sprites = st->ppu.num_sprites;
+	lcd_WYline = (unsigned)st->ppu.lcd_WYline;
+
+	/* invalidate the tile cache: it must be rebuilt from the loaded VRAM */
+	memset(tilecache, 0, sizeof(tilecache));
+}

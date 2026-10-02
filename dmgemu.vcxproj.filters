@@ -62,6 +62,9 @@
     <ClCompile Include="mmio.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="savestate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gb.h">
@@ -107,6 +110,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="mmio.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="savestate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

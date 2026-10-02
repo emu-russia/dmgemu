@@ -13,6 +13,22 @@ void pad_shutdown()
 {
 }
 
+/* **********************************************************************
+	save states
+********************************************************************** */
+
+void pad_state_save(SaveState* st)
+{
+	st->pad.hi = pad_override[0];
+	st->pad.lo = pad_override[1];
+}
+
+void pad_state_load(const SaveState* st)
+{
+	pad_override[0] = st->pad.hi;
+	pad_override[1] = st->pad.lo;
+}
+
 // **********************************************************************
 
 uint8_t pad_hi()

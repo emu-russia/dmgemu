@@ -29,6 +29,26 @@ extern uint32_t apu_clk_inner[2];
 extern uint32_t apu_clk_nextchange;
 // ALL internal clock variables are exported (to be wrapped in gb.c)
 
+/* Sound channels and the whole APU state. The types are public so that a
+   save state can snapshot them, but the fields are only used by apu.cpp. */
+typedef struct
+{
+	int on;
+	unsigned pos;
+	unsigned cnt,encnt,swcnt;
+	//int len, enlen, swlen;
+	//int swfreq;
+	unsigned freq,swfreq;
+	unsigned envol;//, endir;
+} sndchan;
+
+typedef struct
+{
+	unsigned outfreq,ratelo,ratehi,z0;
+	sndchan ch[4];
+	uint8_t wave[16];
+} apu_state;
+
 
 uint8_t apu_read(uint8_t);
 void apu_write(uint8_t, uint8_t);

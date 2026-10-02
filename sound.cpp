@@ -83,3 +83,13 @@ void pop_sample(int l, int r)
 		}
 	}
 }
+
+/* Drop everything that was queued for playback (used after a state load,
+   so that the sound of the old position is not played any more) */
+void sound_flush(void)
+{
+	if (SampleBuf == nullptr) return;
+	SampleBuf_WrPtr = 0;
+	SampleBuf_RdPtr = 0;
+	memset(SampleBuf, 0, SampleBuf_Size * WAV_CHANNELS);
+}

@@ -3,5 +3,6 @@ x64
 Debug
 Release
 *.sav
+*.st[0-9]
 *.vcxproj.user
 /build

@@ -186,3 +186,28 @@ void mmio_timer_init(void)
 	tim_en = 0;
 	tim_shift = timshift_tab[0];
 }
+
+/* ------------------------------------------------------------------ */
+/* save states                                                         */
+
+void mmio_state_save(SaveState* st)
+{
+	st->timer.div_epoch = div_epoch;
+	st->timer.tcur = tcur;
+	st->timer.reload_at = reload_at;
+	st->timer.vcur = (int32_t)vcur;
+	st->timer.tim_en = tim_en;
+	st->timer.tim_shift = tim_shift;
+	st->timer.reload_val = reload_val;
+}
+
+void mmio_state_load(const SaveState* st)
+{
+	div_epoch = st->timer.div_epoch;
+	tcur = st->timer.tcur;
+	reload_at = st->timer.reload_at;
+	vcur = (int)st->timer.vcur;
+	tim_en = st->timer.tim_en;
+	tim_shift = st->timer.tim_shift;
+	reload_val = st->timer.reload_val;
+}

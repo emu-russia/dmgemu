@@ -906,3 +906,33 @@ void sm83_init()
 	R_PC = 0;
 	HALT = IME = ime_delay = 0;
 }
+
+/* **********************************************************************
+	save states
+********************************************************************** */
+
+void sm83_state_save(SaveState* st)
+{
+	st->cpu.af = R_AF;
+	st->cpu.bc = R_BC;
+	st->cpu.de = R_DE;
+	st->cpu.hl = R_HL;
+	st->cpu.sp = R_SP;
+	st->cpu.pc = R_PC;
+	st->cpu.halt = (uint8_t)HALT;
+	st->cpu.ime = (uint8_t)IME;
+	st->cpu.ime_delay = (uint8_t)ime_delay;
+}
+
+void sm83_state_load(const SaveState* st)
+{
+	R_AF = st->cpu.af;
+	R_BC = st->cpu.bc;
+	R_DE = st->cpu.de;
+	R_HL = st->cpu.hl;
+	R_SP = st->cpu.sp;
+	R_PC = st->cpu.pc;
+	HALT = st->cpu.halt;
+	IME = st->cpu.ime;
+	ime_delay = st->cpu.ime_delay;
+}

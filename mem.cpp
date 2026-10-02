@@ -374,3 +374,22 @@ void mem_write16 (unsigned addr,unsigned d) {
 	addr++;
 	mem_w8[addr>>8](addr,(uint8_t)(d>>8));
 }
+
+/**********************************************************************
+	save states: the three memory arrays (the memory map itself is
+	rebuilt by cart_state_load(), the registers live in hram)
+**********************************************************************/
+
+void mem_state_save(SaveState* st)
+{
+	memcpy(st->mem.vram, vram, sizeof(vram));
+	memcpy(st->mem.ram, ram, sizeof(ram));
+	memcpy(st->mem.hram, hram, sizeof(hram));
+}
+
+void mem_state_load(const SaveState* st)
+{
+	memcpy(vram, st->mem.vram, sizeof(vram));
+	memcpy(ram, st->mem.ram, sizeof(ram));
+	memcpy(hram, st->mem.hram, sizeof(hram));
+}

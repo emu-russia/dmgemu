@@ -38,5 +38,6 @@
 #include "mmio.h"
 #include "dbghooks.h"
 #include "introm.h"
+#include "savestate.h"
 // perftimer-good timer implementation for win32/x86MMX
 #include "perftimer.h"

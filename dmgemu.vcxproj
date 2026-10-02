@@ -203,6 +203,7 @@
     <ClCompile Include="perftimer.cpp" />
     <ClCompile Include="apu.cpp" />
     <ClCompile Include="sound.cpp" />
+    <ClCompile Include="savestate.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cart.h" />
@@ -220,6 +221,7 @@
     <ClInclude Include="perftimer.h" />
     <ClInclude Include="apu.h" />
     <ClInclude Include="sound.h" />
+    <ClInclude Include="savestate.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="thirdparty\SDL2\VisualC\SDL\SDL.vcxproj">
