@@ -45,7 +45,9 @@ void check4LCDint(unsigned mode) { // Also called from mem.c!!
 	//unsigned lcd_int_on_new=; // LYC is not processed here
 	if(R_STAT&stat2LCDflg[mode]/* !lcd_int_on && */) {// check if interrupt is requested already
 		R_IF|=INT_LCDSTAT;
-		sm83_check4int(); // do int if possible
+		/* The request is only *raised* here: the CPU samples it at the end of
+		   the instruction it is executing (see sm83_check4int), exactly like a
+		   request coming from the LCD itself. */
 	}
 	//lcd_int_on = lcd_int_on_new;
 }
@@ -56,7 +58,6 @@ void check4LYC(void) {  // Also called from mem.c!!
 		if(R_STAT < stnew)
 			if(stnew&0x40) {// check if interrupt allowed
 				R_IF|=INT_LCDSTAT;
-				sm83_check4int(); // do int if possible
 			}
 	}
 	R_STAT=stnew;
@@ -74,7 +75,8 @@ static void execute(uint32_t n) {
 	while((tc = mmio_timer_next_event()) != MAXULONG && gb_eventclk >= tc) {
 		sm83_execute_until(tc);
 		mmio_timer_fire();	// TIMA overflow: reload from TMA, request timer interrupt
-		sm83_check4int();
+		/* the request (INT_TIMER) is sampled by the CPU with the next
+		   instruction it executes - see sm83_check4int */
 	}
 	sm83_execute_until(gb_eventclk);
 }
@@ -136,7 +138,9 @@ void start()
 		//if(R_STAT & 0x10) // questionable
 		if(R_LCDC & 0x80) { // V-Blank only while LCD is on
 			R_IF|=INT_VBLANK; // Queue V-blank int
-			sm83_check4int();
+			/* No dispatch here: the request is sampled by the CPU at the end
+			   of the instruction it is running, so software polling LY for
+			   $90 can still see the first VBlank line (see sm83_check4int). */
 			STAT_MODE(1);
 		}
 		ppu_vsync();
