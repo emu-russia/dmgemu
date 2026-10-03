@@ -15,8 +15,11 @@ void savestate_next_slot(void)
 
 static void savestate_file_name(int slot, char* name)
 {
-	/* same convention as the battery RAM: <cartridge title>.sav */
-	sprintf(name, "%s.st%d", cart.title, slot);
+	/* next to the ROM, named after the ROM file: <rom>.st0, <rom>.st1, ... */
+	char suffix[8];
+
+	sprintf(suffix, ".st%d", slot);
+	save_file_name(name, SAVE_FILE_NAME_MAX, suffix);
 }
 
 /* ---------------- the state of every module ---------------- */
@@ -77,7 +80,7 @@ static int savestate_read_screen(FILE* f, uint32_t pixels)
 
 int savestate_save(int slot)
 {
-	char name[64];
+	char name[SAVE_FILE_NAME_MAX];
 	SaveState st;
 	FILE* f;
 	int ok;
@@ -112,7 +115,7 @@ int savestate_save(int slot)
 
 int savestate_load(int slot)
 {
-	char name[64];
+	char name[SAVE_FILE_NAME_MAX];
 	SaveState st;
 	FILE* f;
 	int status = SS_LOAD_OK;
