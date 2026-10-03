@@ -25,11 +25,54 @@ void rand_init()
 	srand(time(0));
 }
 
+/* Path of the loaded ROM, exactly as it was passed to load_game(). The battery
+   RAM and the save states are created next to it and are named after the ROM
+   file (D:\Roms\DMG\BTDD.gb -> D:\Roms\DMG\BTDD.sav / BTDD.st0). */
+static char rom_path[SAVE_FILE_NAME_MAX];
+
+/* <rom_path without extension><suffix> */
+void save_file_name(char* out, int out_size, const char* suffix)
+{
+	int i, base = 0, len;
+
+	if (!rom_path[0])
+	{
+		/* no cartridge in the slot at all */
+		strncpy(out, "dmgemu", out_size - 1);
+		out[out_size - 1] = 0;
+	}
+	else
+	{
+		strncpy(out, rom_path, out_size - 1);
+		out[out_size - 1] = 0;
+
+		/* the file name starts after the last path separator */
+		for (i = 0; out[i]; i++)
+			if (out[i] == '/' || out[i] == '\\') base = i + 1;
+
+		/* and the ROM extension is dropped, so that BTDD.gb gives BTDD.sav */
+		len = (int)strlen(out);
+		for (i = len; i > base + 1; i--)
+		{
+			if (out[i - 1] == '.')
+			{
+				out[i - 1] = 0;
+				break;
+			}
+		}
+	}
+
+	strncat(out, suffix, out_size - (int)strlen(out) - 1);
+}
+
 /* load game from file */
 void load_game(char *name)
 {
 	FILE *f;
 	long size;
+
+	strncpy(rom_path, name, SAVE_FILE_NAME_MAX - 1);
+	rom_path[SAVE_FILE_NAME_MAX - 1] = 0;
 
 	f = fopen(name, "rb");
 	if (!f) {
@@ -105,9 +148,9 @@ void load_SRAM(uint8_t* ram_ptr, long size)
 {
 	FILE *f;
 	long i;
-	char name[128];
+	char name[SAVE_FILE_NAME_MAX];
 
-	sprintf(name, "%s.sav", romhdr->title);
+	save_file_name(name, sizeof(name), ".sav");
 	f = fopen(name, "rb");
 	if(!f)
 	{
@@ -128,11 +171,15 @@ void load_SRAM(uint8_t* ram_ptr, long size)
 void save_SRAM(uint8_t* ram_ptr, long size)
 {
 	FILE *f;
-	char name[128];
+	char name[SAVE_FILE_NAME_MAX];
 
-	sprintf(name, "%s.sav", romhdr->title);
+	save_file_name(name, sizeof(name), ".sav");
 	f = fopen(name, "wb");
-	if(!f) return;
+	if(!f)
+	{
+		__log("battery RAM: cannot write %s", name);
+		return;
+	}
 	fwrite(ram_ptr, 1, size, f);
 	fclose(f);
 }
